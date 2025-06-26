@@ -19,7 +19,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class CompanyEventLogModelTest extends TestCase
 {
-    /** @var \PHPUnit\Framework\MockObject\MockObject&\Doctrine\ORM\EntityManagerInterface */
+    /** @var \PHPUnit\Framework\MockObject\MockObject&EntityManagerInterface */
     private $em;
     private CorePermissions $security;
     private EventDispatcherInterface $dispatcher;
