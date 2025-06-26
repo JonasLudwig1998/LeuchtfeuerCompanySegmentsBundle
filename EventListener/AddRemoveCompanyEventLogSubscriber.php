@@ -5,9 +5,6 @@ declare(strict_types=1);
 namespace MauticPlugin\LeuchtfeuerCompanySegmentsBundle\EventListener;
 
 use Mautic\CoreBundle\Helper\UserHelper;
-use Mautic\LeadBundle\Entity\Company;
-use MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Entity\CompanyEventLog;
-use MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Entity\CompanySegment;
 use MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Event\CompanySegmentAddEvent;
 use MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Event\CompanySegmentRemoveEvent;
 use MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Integration\Config;
@@ -18,8 +15,6 @@ class AddRemoveCompanyEventLogSubscriber implements EventSubscriberInterface
 {
     public function __construct(
         private CompanyEventLogModel $companyEventLogModel,
-        private UserHelper $userHelper,
-        private Config $config,
     ) {
         // Constructor logic if needed
     }
