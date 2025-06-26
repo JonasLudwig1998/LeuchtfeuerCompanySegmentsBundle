@@ -14,15 +14,15 @@ class CompanyEventLogTest extends TestCase
     {
         $eventLog = new CompanyEventLog();
 
-        $this->assertInstanceOf(\DateTime::class, $eventLog->getDateAdded());
-        $this->assertNull($eventLog->getCompany());
-        $this->assertNull($eventLog->getUserId());
-        $this->assertNull($eventLog->getUserName());
-        $this->assertNull($eventLog->getBundle());
-        $this->assertNull($eventLog->getObject());
-        $this->assertNull($eventLog->getObjectId());
-        $this->assertNull($eventLog->getAction());
-        $this->assertNull($eventLog->getProperties());
+        self::assertInstanceOf(\DateTime::class, $eventLog->getDateAdded());
+        self::assertNull($eventLog->getCompany());
+        self::assertNull($eventLog->getUserId());
+        self::assertNull($eventLog->getUserName());
+        self::assertNull($eventLog->getBundle());
+        self::assertNull($eventLog->getObject());
+        self::assertNull($eventLog->getObjectId());
+        self::assertNull($eventLog->getAction());
+        self::assertNull($eventLog->getProperties());
     }
 
     public function testSettersAndGetters(): void
@@ -41,15 +41,15 @@ class CompanyEventLogTest extends TestCase
         $eventLog->setDateAdded($date);
         $eventLog->setProperties(['foo' => 'bar']);
 
-        $this->assertSame($company, $eventLog->getCompany());
-        $this->assertSame(42, $eventLog->getUserId());
-        $this->assertSame('John Doe', $eventLog->getUserName());
-        $this->assertSame('TestBundle', $eventLog->getBundle());
-        $this->assertSame('TestObject', $eventLog->getObject());
-        $this->assertSame(123, $eventLog->getObjectId());
-        $this->assertSame('create', $eventLog->getAction());
-        $this->assertSame($date, $eventLog->getDateAdded());
-        $this->assertSame(['foo' => 'bar'], $eventLog->getProperties());
+        self::assertSame($company, $eventLog->getCompany());
+        self::assertSame(42, $eventLog->getUserId());
+        self::assertSame('John Doe', $eventLog->getUserName());
+        self::assertSame('TestBundle', $eventLog->getBundle());
+        self::assertSame('TestObject', $eventLog->getObject());
+        self::assertSame(123, $eventLog->getObjectId());
+        self::assertSame('create', $eventLog->getAction());
+        self::assertSame($date, $eventLog->getDateAdded());
+        self::assertSame(['foo' => 'bar'], $eventLog->getProperties());
     }
 
     public function testAddProperty(): void
@@ -58,6 +58,6 @@ class CompanyEventLogTest extends TestCase
         $eventLog->setProperties(['foo' => 'bar']);
         $eventLog->addProperty('baz', 'qux');
 
-        $this->assertSame(['foo' => 'bar', 'baz' => 'qux'], $eventLog->getProperties());
+        self::assertSame(['foo' => 'bar', 'baz' => 'qux'], $eventLog->getProperties());
     }
 }

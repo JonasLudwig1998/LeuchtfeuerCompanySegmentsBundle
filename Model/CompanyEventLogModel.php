@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Model;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\EntityRepository;
-use Mautic\CoreBundle\Entity\CommonRepository;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\CoreBundle\Helper\UserHelper;
 use Mautic\CoreBundle\Model\FormModel;
@@ -20,6 +18,9 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
+/**
+ * @extends FormModel<CompanyEventLog>
+ */
 class CompanyEventLogModel extends FormModel
 {
     public function __construct(
@@ -35,9 +36,12 @@ class CompanyEventLogModel extends FormModel
         parent::__construct($em, $security, $dispatcher, $router, $translator, $userHelper, $logger, $coreParametersHelper);
     }
 
-    public function getRepository(): CompanyEventLogRepository|EntityRepository|CommonRepository
+    public function getRepository(): CompanyEventLogRepository
     {
-        return $this->em->getRepository(CompanyEventLog::class);
+        $repository = $this->em->getRepository(CompanyEventLog::class);
+        \assert($repository instanceof CompanyEventLogRepository);
+
+        return $repository;
     }
 
     public function saveCompanyEventLog(string $action, Company $company, CompanySegment $companySegment): void
@@ -46,21 +50,23 @@ class CompanyEventLogModel extends FormModel
         $companyEventLog->setCompany($company);
         $companyEventLog->setBundle('company');
         $companyEventLog->setAction($action);
-        $companyEventLog->setObject('segment');
+        $companyEventLog->setObject('company_segment');
         $companyEventLog->setObjectId($companySegment->getId());
         $companyEventLog->setDateAdded(new \DateTime());
         $userId      = null; // Set the user ID if available
         $userName    = 'System'; // or use the actual user name if available
         $currentUser = $this->userHelper->getUser();
-        if ($currentUser) {
+        if (!is_null($currentUser)) {
             $userId   = $currentUser->getId();
             $userName = $currentUser->getUsername();
         }
+        $companySegmentId   = is_null($companySegment->getId()) ? 0 : $companySegment->getId();
+        $companySegmentName = is_null($companySegment->getName()) ? '' : $companySegment->getName();
         $companyEventLog->setProperties([
-            'company_segment_id'   => $companySegment->getId(),
-            'company_segment_name' => $companySegment->getName(),
+            'company_segment_id'   => $companySegmentId,
+            'company_segment_name' => $companySegmentName,
             'company_id'           => $company->getId(),
-            'object_description'   => $companySegment->getName(),
+            'object_description'   => $companySegmentName,
         ]);
         $companyEventLog->setUserId($userId); // Set the user ID if available
         $companyEventLog->setUserName($userName); // or use the actual user name if available

@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace MauticPlugin\LeuchtfeuerCompanySegmentsBundle\EventListener;
 
-use Mautic\CoreBundle\Helper\UserHelper;
 use MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Event\CompanySegmentAddEvent;
 use MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Event\CompanySegmentRemoveEvent;
-use MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Integration\Config;
 use MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Model\CompanyEventLogModel;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 

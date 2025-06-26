@@ -19,14 +19,15 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class CompanyEventLogModelTest extends TestCase
 {
+    /** @var \PHPUnit\Framework\MockObject\MockObject&\Doctrine\ORM\EntityManagerInterface */
     private $em;
-    private $security;
-    private $dispatcher;
-    private $router;
-    private $translator;
-    private $userHelper;
-    private $logger;
-    private $coreParametersHelper;
+    private CorePermissions $security;
+    private EventDispatcherInterface $dispatcher;
+    private UrlGeneratorInterface $router;
+    private Translator $translator;
+    private UserHelper $userHelper;
+    private LoggerInterface $logger;
+    private CoreParametersHelper $coreParametersHelper;
 
     protected function setUp(): void
     {
@@ -56,6 +57,6 @@ class CompanyEventLogModelTest extends TestCase
             $this->coreParametersHelper
         );
 
-        $this->assertSame($repo, $model->getRepository());
+        self::assertSame($repo, $model->getRepository());
     }
 }

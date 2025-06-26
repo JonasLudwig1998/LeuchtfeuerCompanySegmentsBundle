@@ -33,7 +33,7 @@ class UpdatePluginSubscriber implements EventSubscriberInterface
 
         $companyEventLogMetadata = $pluginMetadata['MauticPlugin\LeuchtfeuerCompanySegmentsBundle'];
         $tableInstalled          =$this->pluginModel->getInstalledPluginTables($pluginMetadata);
-        if (empty($tableInstalled)) {
+        if ([] === $tableInstalled) {
             // No tables installed, so we can install the schema
             PluginBundleBase::installPluginSchema($companyEventLogMetadata, $this->factory);
 
