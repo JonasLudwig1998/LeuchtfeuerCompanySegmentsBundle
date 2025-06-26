@@ -20,7 +20,6 @@ parameters:
         - message: "#has parameter \\$metadata with generic class Doctrine\\\\ORM\\\\Mapping\\\\ClassMetadata#"
           count: 1
           path: Entity/CompanySegment.php
-          ### below is added to base Mautic phpstan.neon ###
         - message: "#has parameter \\$metadata with generic class Doctrine\\\\ORM\\\\Mapping\\\\ClassMetadata#"
           count: 1
           path: Entity/CompanyEventLog.php
