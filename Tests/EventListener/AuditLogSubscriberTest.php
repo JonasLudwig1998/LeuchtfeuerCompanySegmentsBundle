@@ -12,8 +12,8 @@ use MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Tests\Support\ActivePluginTrai
 class AuditLogSubscriberTest extends MauticMysqlTestCase
 {
     use ActivePluginTrait;
-    private AuditLogModel $auditLogModel;
-    private CompanySegmentModel $companySegmentModel;
+    private ?AuditLogModel $auditLogModel;
+    private ?CompanySegmentModel $companySegmentModel;
 
     private int $baseTotalRows = 0;
 
