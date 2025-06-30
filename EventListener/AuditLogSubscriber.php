@@ -44,8 +44,6 @@ class AuditLogSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @param CompanySegmentPostSave|CompanySegmentPostDelete $companySegmentCrud
-     *
      * @return array<string, mixed>
      */
     private function getArgsFromCompanySegmentToAuditLog(CompanySegmentPostSave|CompanySegmentPostDelete $companySegmentCrud, string $action, string $object): array
