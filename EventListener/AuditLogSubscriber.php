@@ -43,8 +43,11 @@ class AuditLogSubscriber implements EventSubscriberInterface
         $this->auditLogModel->writeToLog($args);
     }
 
+
     /**
-     * Prepare the arguments for the audit log entry.
+     * @param CompanySegmentPostSave|CompanySegmentPostDelete $companySegmentCrud
+     *
+     * @return array<string, mixed>
      */
     private function getArgsFromCompanySegmentToAuditLog($companySegmentCrud, string $action, string $object): array
     {

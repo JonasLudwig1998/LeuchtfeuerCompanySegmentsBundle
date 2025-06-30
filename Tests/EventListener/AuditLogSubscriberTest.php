@@ -53,9 +53,9 @@ class AuditLogSubscriberTest extends MauticMysqlTestCase
         $this->assertCount($this->baseTotalRows + 1, $auditLogResultAfter, 'Audit log should contain one entry after creating a company segment');
         $lastLog = end($auditLogResultAfter);
         assert($lastLog instanceof AuditLog);
-        $this->assertEquals('company_segment', $lastLog->getObject());
-        $this->assertEquals('added', $lastLog->getAction());
-        $this->assertEquals($companySegment->getId(), $lastLog->getObjectId());
+        self::assertEquals('company_segment', $lastLog->getObject());
+        self::assertEquals('added', $lastLog->getAction());
+        self::assertEquals($companySegment->getId(), $lastLog->getObjectId());
 
         return $companySegment;
     }
@@ -72,9 +72,9 @@ class AuditLogSubscriberTest extends MauticMysqlTestCase
         $this->assertCount($this->baseTotalRows + 2, $auditLogResultAfter, 'Audit log should contain one more entry after updating a company segment');
         $lastLog = end($auditLogResultAfter);
         assert($lastLog instanceof AuditLog);
-        $this->assertEquals('company_segment', $lastLog->getObject());
-        $this->assertEquals('updated', $lastLog->getAction());
-        $this->assertEquals($companySegment->getId(), $lastLog->getObjectId());
+        self::assertEquals('company_segment', $lastLog->getObject());
+        self::assertEquals('updated', $lastLog->getAction());
+        self::assertEquals($companySegment->getId(), $lastLog->getObjectId());
 
         return $companySegment;
     }
@@ -90,8 +90,8 @@ class AuditLogSubscriberTest extends MauticMysqlTestCase
         $this->assertCount($this->baseTotalRows + 3, $auditLogResultAfter, 'Audit log should contain one more entry after deleting a company segment');
         $lastLog = end($auditLogResultAfter);
         assert($lastLog instanceof AuditLog);
-        $this->assertEquals('company_segment', $lastLog->getObject());
-        $this->assertEquals('deleted', $lastLog->getAction());
-        $this->assertEquals($companySegment->getId(), $lastLog->getObjectId());
+        self::assertEquals('company_segment', $lastLog->getObject());
+        self::assertEquals('deleted', $lastLog->getAction());
+        self::assertEquals($companySegment->getId(), $lastLog->getObjectId());
     }
 }

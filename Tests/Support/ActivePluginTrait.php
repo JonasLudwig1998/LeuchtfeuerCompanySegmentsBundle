@@ -13,7 +13,7 @@ trait ActivePluginTrait
         $this->client->request('GET', '/s/plugins/reload');
         $nameBundle  = 'LeuchtfeuerCompanySegmentsBundle';
         $integration = $this->em->getRepository(Integration::class)->findOneBy(['name' => LeuchtfeuerCompanySegmentsIntegration::NAME]);
-        if (empty($integration)) {
+        if (null !== $integration) {
             $plugin      = $this->em->getRepository(Plugin::class)->findOneBy(['bundle' => $nameBundle]);
             $integration = new Integration();
             $integration->setName(str_replace('Bundle', '', $nameBundle));
