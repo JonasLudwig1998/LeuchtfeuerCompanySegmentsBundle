@@ -24,14 +24,11 @@ class AuditLogSubscriberTest extends MauticMysqlTestCase
         $this->useCleanupRollback = false;
         $this->setUpSymfony($this->configParams);
         $this->auditLogModel = self::getContainer()->get('mautic.core.model.auditlog');
-        self::assertInstanceOf(AuditLogModel::class, $this->auditLogModel, 'AuditLogModel should be an instance of AuditLogModel');
         self::assertNotNull($this->auditLogModel, 'AuditLogModel should not be null');
-        // Ensure the model is of the correct type
-        assert($this->auditLogModel instanceof AuditLogModel);
+        self::assertInstanceOf(AuditLogModel::class, $this->auditLogModel, 'AuditLogModel should be an instance of AuditLogModel');
         $this->companySegmentModel = self::getContainer()->get('mautic.company_segments.model.company_segment');
-        self::assertInstanceOf(CompanySegmentModel::class, $this->companySegmentModel, 'CompanySegmentModel should be an instance of CompanySegmentModel');
         self::assertNotNull($this->companySegmentModel, 'CompanySegmentModel should not be null');
-        assert($this->companySegmentModel instanceof CompanySegmentModel);
+        self::assertInstanceOf(CompanySegmentModel::class, $this->companySegmentModel, 'CompanySegmentModel should be an instance of CompanySegmentModel');
         $this->baseTotalRows = count($this->auditLogModel->getRepository()->findAll());
     }
 
