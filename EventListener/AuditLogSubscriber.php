@@ -43,7 +43,6 @@ class AuditLogSubscriber implements EventSubscriberInterface
         $this->auditLogModel->writeToLog($args);
     }
 
-
     /**
      * @param CompanySegmentPostSave|CompanySegmentPostDelete $companySegmentCrud
      *

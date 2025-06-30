@@ -19,6 +19,7 @@ trait ActivePluginTrait
             $integration->setName(str_replace('Bundle', '', $nameBundle));
             $integration->setPlugin($plugin);
         }
+        assert($integration instanceof Integration, 'Integration should be an instance of Integration');
         $integration->setIsPublished($isPublished);
         $this->em->persist($integration);
         $this->em->flush();

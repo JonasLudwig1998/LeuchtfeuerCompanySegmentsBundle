@@ -24,8 +24,13 @@ class AuditLogSubscriberTest extends MauticMysqlTestCase
         $this->useCleanupRollback = false;
         $this->setUpSymfony($this->configParams);
         $this->auditLogModel = self::getContainer()->get('mautic.core.model.auditlog');
+        self::assertInstanceOf(AuditLogModel::class, $this->auditLogModel, 'AuditLogModel should be an instance of AuditLogModel');
+        self::assertNotNull($this->auditLogModel, 'AuditLogModel should not be null');
+        // Ensure the model is of the correct type
         assert($this->auditLogModel instanceof AuditLogModel);
         $this->companySegmentModel = self::getContainer()->get('mautic.company_segments.model.company_segment');
+        self::assertInstanceOf(CompanySegmentModel::class, $this->companySegmentModel, 'CompanySegmentModel should be an instance of CompanySegmentModel');
+        self::assertNotNull($this->companySegmentModel, 'CompanySegmentModel should not be null');
         assert($this->companySegmentModel instanceof CompanySegmentModel);
         $this->baseTotalRows = count($this->auditLogModel->getRepository()->findAll());
     }
@@ -40,7 +45,7 @@ class AuditLogSubscriberTest extends MauticMysqlTestCase
     private function createCompanySegmentAndCheckAuditLog(): CompanySegment
     {
         $auditLogResultBefore = $this->auditLogModel->getRepository()->findAll();
-        $this->assertCount($this->baseTotalRows, $auditLogResultBefore, 'Audit log should be empty before creating a company segment');
+        self::assertCount($this->baseTotalRows, $auditLogResultBefore, 'Audit log should be empty before creating a company segment');
 
         $companySegment = new CompanySegment();
         $companySegment->setName('Test Segment');
@@ -50,7 +55,7 @@ class AuditLogSubscriberTest extends MauticMysqlTestCase
         $this->companySegmentModel->saveEntity($companySegment);
 
         $auditLogResultAfter = $this->auditLogModel->getRepository()->findAll();
-        $this->assertCount($this->baseTotalRows + 1, $auditLogResultAfter, 'Audit log should contain one entry after creating a company segment');
+        self::assertCount($this->baseTotalRows + 1, $auditLogResultAfter, 'Audit log should contain one entry after creating a company segment');
         $lastLog = end($auditLogResultAfter);
         assert($lastLog instanceof AuditLog);
         self::assertEquals('company_segment', $lastLog->getObject());
@@ -63,13 +68,13 @@ class AuditLogSubscriberTest extends MauticMysqlTestCase
     private function updateCompanySegmentAndCheckAuditLog(CompanySegment $companySegment): CompanySegment
     {
         $auditLogResultBefore = $this->auditLogModel->getRepository()->findAll();
-        $this->assertCount($this->baseTotalRows + 1, $auditLogResultBefore, 'Audit log should contain one entry before updating a company segment');
+        self::assertCount($this->baseTotalRows + 1, $auditLogResultBefore, 'Audit log should contain one entry before updating a company segment');
 
         $companySegment->setName('Updated Segment Name');
         $this->companySegmentModel->saveEntity($companySegment);
 
         $auditLogResultAfter = $this->auditLogModel->getRepository()->findAll();
-        $this->assertCount($this->baseTotalRows + 2, $auditLogResultAfter, 'Audit log should contain one more entry after updating a company segment');
+        self::assertCount($this->baseTotalRows + 2, $auditLogResultAfter, 'Audit log should contain one more entry after updating a company segment');
         $lastLog = end($auditLogResultAfter);
         assert($lastLog instanceof AuditLog);
         self::assertEquals('company_segment', $lastLog->getObject());
@@ -82,12 +87,12 @@ class AuditLogSubscriberTest extends MauticMysqlTestCase
     private function deleteCompanySegmentAndCheckAuditLog(CompanySegment $companySegment): void
     {
         $auditLogResultBefore = $this->auditLogModel->getRepository()->findAll();
-        $this->assertCount($this->baseTotalRows + 2, $auditLogResultBefore, 'Audit log should contain one entry before deleting a company segment');
+        self::assertCount($this->baseTotalRows + 2, $auditLogResultBefore, 'Audit log should contain one entry before deleting a company segment');
 
         $this->companySegmentModel->deleteEntity($companySegment);
 
         $auditLogResultAfter = $this->auditLogModel->getRepository()->findAll();
-        $this->assertCount($this->baseTotalRows + 3, $auditLogResultAfter, 'Audit log should contain one more entry after deleting a company segment');
+        self::assertCount($this->baseTotalRows + 3, $auditLogResultAfter, 'Audit log should contain one more entry after deleting a company segment');
         $lastLog = end($auditLogResultAfter);
         assert($lastLog instanceof AuditLog);
         self::assertEquals('company_segment', $lastLog->getObject());
