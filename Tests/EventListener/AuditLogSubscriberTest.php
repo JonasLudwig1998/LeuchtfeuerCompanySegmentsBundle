@@ -12,8 +12,8 @@ use MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Tests\Support\ActivePluginTrai
 class AuditLogSubscriberTest extends MauticMysqlTestCase
 {
     use ActivePluginTrait;
-    private ?AuditLogModel $auditLogModel;
-    private ?CompanySegmentModel $companySegmentModel;
+    private AuditLogModel $auditLogModel;
+    private CompanySegmentModel $companySegmentModel;
 
     private int $baseTotalRows = 0;
 
@@ -23,12 +23,14 @@ class AuditLogSubscriberTest extends MauticMysqlTestCase
         $this->activePlugin();
         $this->useCleanupRollback = false;
         $this->setUpSymfony($this->configParams);
-        $this->auditLogModel = self::getContainer()->get('mautic.core.model.auditlog');
+        $auditLogModelTemp = self::getContainer()->get('mautic.core.model.auditlog');
+        assert($auditLogModelTemp instanceof AuditLogModel, 'AuditLogModel should be an instance of AuditLogModel');
+        $this->auditLogModel = $auditLogModelTemp;
         self::assertNotNull($this->auditLogModel, 'AuditLogModel should not be null');
-        self::assertInstanceOf(AuditLogModel::class, $this->auditLogModel, 'AuditLogModel should be an instance of AuditLogModel');
-        $this->companySegmentModel = self::getContainer()->get('mautic.company_segments.model.company_segment');
+        $companySegmentModelTemp = self::getContainer()->get('mautic.company_segments.model.company_segment');
+        assert($companySegmentModelTemp instanceof CompanySegmentModel, 'CompanySegmentModel should be an instance of CompanySegmentModel');
+        $this->companySegmentModel = $companySegmentModelTemp;
         self::assertNotNull($this->companySegmentModel, 'CompanySegmentModel should not be null');
-        self::assertInstanceOf(CompanySegmentModel::class, $this->companySegmentModel, 'CompanySegmentModel should be an instance of CompanySegmentModel');
         $this->baseTotalRows = count($this->auditLogModel->getRepository()->findAll());
     }
 
