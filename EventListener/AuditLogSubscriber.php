@@ -48,7 +48,7 @@ class AuditLogSubscriber implements EventSubscriberInterface
      *
      * @return array<string, mixed>
      */
-    private function getArgsFromCompanySegmentToAuditLog($companySegmentCrud, string $action, string $object): array
+    private function getArgsFromCompanySegmentToAuditLog(CompanySegmentPostSave|CompanySegmentPostDelete $companySegmentCrud, string $action, string $object): array
     {
         $objectId = $companySegmentCrud->getCompanySegment()->getId() ?? 0;
 
