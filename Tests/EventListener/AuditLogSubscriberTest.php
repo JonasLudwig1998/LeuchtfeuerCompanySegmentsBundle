@@ -59,6 +59,9 @@ class AuditLogSubscriberTest extends MauticMysqlTestCase
         assert($lastLog instanceof AuditLog);
         self::assertEquals('company_segment', $lastLog->getObject());
         self::assertEquals('added', $lastLog->getAction());
+        self::assertStringContainsString('publicName', json_encode($lastLog->getDetails()));
+        self::assertStringContainsString('alias', json_encode($lastLog->getDetails()));
+        self::assertStringContainsString('object_description', json_encode($lastLog->getDetails()));
         self::assertEquals($companySegment->getId(), $lastLog->getObjectId());
 
         return $companySegment;

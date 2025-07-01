@@ -48,7 +48,11 @@ class AuditLogSubscriber implements EventSubscriberInterface
      */
     private function getArgsFromCompanySegmentToAuditLog(CompanySegmentPostSave|CompanySegmentPostDelete $companySegmentCrud, string $action, string $object): array
     {
-        $objectId = $companySegmentCrud->getCompanySegment()->getId() ?? 0;
+        $objectId                        = $companySegmentCrud->getCompanySegment()->getId() ?? 0;
+        $details                         = $companySegmentCrud->getChanges();
+        $details['object_description']   = $companySegmentCrud->getCompanySegment()->getName();
+        $details['company_segment_name'] = $companySegmentCrud->getCompanySegment()->getName();
+        $details['company_segment_id']   = $objectId;
 
         return [
             'object'             => $object,
@@ -56,12 +60,8 @@ class AuditLogSubscriber implements EventSubscriberInterface
             'objectId'           => $objectId,
             'object_description' => $companySegmentCrud->getCompanySegment()->getName(),
             'bundle'             => 'company',
-            'details'            => [
-                'company_segment_id'   => $objectId,
-                'company_segment_name' => $companySegmentCrud->getCompanySegment()->getName(),
-                'object_description'   => $companySegmentCrud->getCompanySegment()->getName(),
-            ],
-            'ipAddress' => $this->ipLookupHelper->getIpAddressFromRequest(),
+            'details'            => $details,
+            'ipAddress'          => $this->ipLookupHelper->getIpAddressFromRequest(),
         ];
     }
 }
