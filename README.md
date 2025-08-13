@@ -57,7 +57,24 @@ To update the Company Segments based on their filter, there is a console command
 
 Event Log is created for each Segment updated in the Company Segments view.
 
-Audit Log is created for each Company Segment created, updated or deleted.
+Audit log is created for each Company Segment created, updated or deleted.
+
+## API
+
+Standard CRUD endpoints are available for managing Company Segments:
+
+```
+GET /api/companysegments                                                                                 
+GET /api/companysegments/{id}                                                                            
+POST /api/companysegments/new                                                                             
+POST /api/companysegments/batch/new                                                                       
+PUT /api/companysegments/batch/edit                                                                      
+PATCH /api/companysegments/batch/edit                                                                      
+PUT /api/companysegments/{id}/edit                                                                       
+PATCH /api/companysegments/{id}/edit                                                                       
+DELETE /api/companysegments/batch/delete                                                                    
+DELETE /api/companysegments/{id}/delete
+```
 
 ## Troubleshooting
 Make sure you have not only installed but also enabled the Plugin.
