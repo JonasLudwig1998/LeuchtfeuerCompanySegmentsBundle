@@ -395,7 +395,7 @@ class CompanySegmentController extends AbstractStandardFormController
             ],
         ];
 
-        $dependents = $model->getSegmentsWithDependenciesOnSegment($objectId);
+        $dependents = $model->getSegmentsWithDependenciesOnSegment($objectId, 'id');
 
         if ([] !== $dependents) {
             $flashes[] = [

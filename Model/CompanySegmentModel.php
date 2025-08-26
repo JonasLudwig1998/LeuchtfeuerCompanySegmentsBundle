@@ -268,7 +268,7 @@ class CompanySegmentModel extends FormModel
 
         $filter = [
             'force'  => [
-                ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value'=> '%"type": "company_segments"%'],
+                ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value'=> '%"type":"company_segments"%'],
                 ['column' => $tableAlias.'.id', 'expr' => 'neq', 'value' => $segmentId],
             ],
         ];
@@ -285,7 +285,7 @@ class CompanySegmentModel extends FormModel
                 $filter = $eachFilter['properties']['filter'];
                 if ($filter && self::PROPERTIES_FIELD === $eachFilter['type'] && in_array($segmentId, $filter, true)) {
                     $value = $accessor->getValue($entity, $returnProperty);
-                    if (!is_string($value)) {
+                    if (('id' !== $returnProperty && !is_string($value)) || ('id' === $returnProperty && !is_numeric($value))) {
                         continue; // Return property does not exist.
                     }
 
@@ -296,6 +296,21 @@ class CompanySegmentModel extends FormModel
         }
 
         return $dependents;
+    }
+
+    public function getSegmentsWithDependenciesOnSegment2(int $segmentId)
+    {
+        $qb = $this->em->getConnection()->createQueryBuilder();
+        $qb->select('COUNT(*) AS cnt')
+            ->from(MAUTIC_TABLE_PREFIX.CompanySegment::TABLE_NAME, 'cs')
+//            ->where("JSON_CONTAINS(t.filters, CAST(:segId AS JSON), '$')")
+            ->where("JSON_CONTAINS(cs.filters, :segId, '$[*].properties.filter') = 1")
+            ->setParameter('segId', (string) $segmentId);
+
+        $data = $qb->executeQuery()->fetchAssociative();
+
+        dd($data, $segmentId, $qb->getSQL());
+        // [{"object":"company_segments","glue":"and","field":"company_segments","type":"company_segments","operator":"in","properties":{"filter":[51,63]}}]
     }
 
     /**
