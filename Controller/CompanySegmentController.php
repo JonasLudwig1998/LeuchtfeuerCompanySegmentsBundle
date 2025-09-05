@@ -395,13 +395,29 @@ class CompanySegmentController extends AbstractStandardFormController
             ],
         ];
 
-        $dependents = $model->getSegmentsWithDependenciesOnSegment($objectId);
+        $dependentsCompanySegments = $model->getSegmentsWithDependenciesOnSegment($objectId, 'id');
 
-        if ([] !== $dependents) {
+        if ([] !== $dependentsCompanySegments) {
             $flashes[] = [
                 'type'    => 'error',
-                'msg'     => 'mautic.lead.list.error.cannot.delete',
-                'msgVars' => ['%segments%' => implode(', ', $dependents)],
+                'msg'     => 'mautic.lead.companysegment.error.cannot.delete',
+                'msgVars' => ['%segments%' => implode(', ', $dependentsCompanySegments)],
+            ];
+
+            return $this->postActionRedirect(
+                array_merge($postActionVars, [
+                    'flashes' => $flashes,
+                ])
+            );
+        }
+
+        $dependentsContactSegments = $model->getSegmentsWithDependenciesOnSegment($objectId, 'id', true);
+
+        if ([] !== $dependentsContactSegments) {
+            $flashes[] = [
+                'type'    => 'error',
+                'msg'     => 'mautic.lead.companysegment.segment.error.cannot.delete',
+                'msgVars' => ['%segments%' => implode(', ', $dependentsContactSegments)],
             ];
 
             return $this->postActionRedirect(
@@ -491,18 +507,28 @@ class CompanySegmentController extends AbstractStandardFormController
                 throw new BadRequestHttpException('Invalid ids parameter.');
             }
 
-            $canNotBeDeleted = $model->canNotBeDeleted($ids);
+            $canNotBeDeletedCompanySegment = $model->canNotBeDeleted($ids);
 
-            if (0 !== count($canNotBeDeleted)) {
+            if (0 !== count($canNotBeDeletedCompanySegment)) {
                 $flashes[] = [
                     'type'    => 'error',
-                    'msg'     => 'mautic.lead.list.error.cannot.delete.batch',
-                    'msgVars' => ['%segments%' => implode(', ', $canNotBeDeleted)],
+                    'msg'     => 'mautic.lead.companysegment.error.cannot.delete.batch',
+                    'msgVars' => ['%segments%' => implode(', ', $canNotBeDeletedCompanySegment)],
                 ];
             }
 
-            $toBeDeleted = array_diff($ids, array_keys($canNotBeDeleted));
-            $deleteIds   = [];
+            $canNotBeDeletedContactSegment = $model->canNotBeDeleted($ids, true);
+
+            if (0 !== count($canNotBeDeletedContactSegment)) {
+                $flashes[] = [
+                    'type'    => 'error',
+                    'msg'     => 'mautic.lead.list.error.cannot.delete.batch',
+                    'msgVars' => ['%segments%' => implode(', ', $canNotBeDeletedContactSegment)],
+                ];
+            }
+            $canNotBeDeleted = $canNotBeDeletedCompanySegment + $canNotBeDeletedContactSegment;
+            $toBeDeleted     = array_diff($ids, array_keys($canNotBeDeleted));
+            $deleteIds       = [];
 
             // Loop over the IDs to perform access checks pre-delete
             foreach ($toBeDeleted as $objectId) {
@@ -525,7 +551,6 @@ class CompanySegmentController extends AbstractStandardFormController
                     $deleteIds[] = $objectId;
                 }
             }
-
             // Delete everything we are able to
             if (0 !== count($deleteIds)) {
                 $entities = $model->deleteEntities($deleteIds);

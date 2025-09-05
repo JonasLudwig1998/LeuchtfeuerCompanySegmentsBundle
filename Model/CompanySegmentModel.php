@@ -15,6 +15,7 @@ use Mautic\CoreBundle\Translation\Translator;
 use Mautic\LeadBundle\Entity\Company;
 use Mautic\LeadBundle\Entity\CompanyRepository;
 use Mautic\LeadBundle\Entity\OperatorListTrait;
+use Mautic\LeadBundle\Model\ListModel;
 use MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Entity\CompaniesSegments;
 use MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Entity\CompaniesSegmentsRepository;
 use MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Entity\CompanySegment;
@@ -61,8 +62,20 @@ class CompanySegmentModel extends FormModel
      */
     private array $choiceFieldsCache = [];
 
-    public function __construct(EntityManagerInterface $em, CorePermissions $security, EventDispatcherInterface $dispatcher, UrlGeneratorInterface $router, Translator $translator, UserHelper $userHelper, LoggerInterface $logger, CoreParametersHelper $coreParametersHelper, private SegmentCountCacheHelper $segmentCountCacheHelper, private RequestStack $requestStack, private CompanySegmentService $companySegmentService)
-    {
+    public function __construct(
+        EntityManagerInterface $em,
+        CorePermissions $security,
+        EventDispatcherInterface $dispatcher,
+        UrlGeneratorInterface $router,
+        Translator $translator,
+        UserHelper $userHelper,
+        LoggerInterface $logger,
+        CoreParametersHelper $coreParametersHelper,
+        private SegmentCountCacheHelper $segmentCountCacheHelper,
+        private RequestStack $requestStack,
+        private CompanySegmentService $companySegmentService,
+        private ListModel $listModel,
+    ) {
         parent::__construct($em, $security, $dispatcher, $router, $translator, $userHelper, $logger, $coreParametersHelper);
     }
 
@@ -262,21 +275,33 @@ class CompanySegmentModel extends FormModel
     /**
      * @return array<int, string>
      */
-    public function getSegmentsWithDependenciesOnSegment(int $segmentId, string $returnProperty = 'name'): array
+    public function getSegmentsWithDependenciesOnSegment(int $segmentId, string $returnProperty = 'name', bool $isContactSegment = false): array
     {
-        $tableAlias = $this->getRepository()->getTableAlias();
+        $tableAlias = $isContactSegment
+            ? $this->listModel->getRepository()->getTableAlias()
+            : $this->getRepository()->getTableAlias();
 
         $filter = [
-            'force'  => [
-                ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value'=> '%"type": "company_segments"%'],
-                ['column' => $tableAlias.'.id', 'expr' => 'neq', 'value' => $segmentId],
+            'force' => [
+                [
+                    'column' => $tableAlias.'.filters',
+                    'expr'   => 'LIKE',
+                    'value'  => $isContactSegment
+                        ? '%"type";s:16:"company_segments"%'
+                        : '%"type":"company_segments"%',
+                ],
+                [
+                    'column' => $tableAlias.'.id',
+                    'expr'   => 'neq',
+                    'value'  => $segmentId,
+                ],
             ],
         ];
-        $entities = $this->getEntities(
-            [
-                'filter' => $filter,
-            ]
-        );
+
+        $entities = $isContactSegment
+            ? $this->listModel->getEntities(['filter' => $filter])
+            : $this->getEntities(['filter' => $filter]);
+
         $dependents = [];
         $accessor   = PropertyAccess::createPropertyAccessor();
         foreach ($entities as $entity) {
@@ -285,10 +310,9 @@ class CompanySegmentModel extends FormModel
                 $filter = $eachFilter['properties']['filter'];
                 if ($filter && self::PROPERTIES_FIELD === $eachFilter['type'] && in_array($segmentId, $filter, true)) {
                     $value = $accessor->getValue($entity, $returnProperty);
-                    if (!is_string($value)) {
+                    if (('id' !== $returnProperty && !is_string($value)) || ('id' === $returnProperty && !is_numeric($value))) {
                         continue; // Return property does not exist.
                     }
-
                     $dependents[] = $value;
                     break;
                 }
@@ -303,19 +327,32 @@ class CompanySegmentModel extends FormModel
      *
      * @return array<string>
      */
-    public function canNotBeDeleted(array $segmentIds): array
+    public function canNotBeDeleted(array $segmentIds, bool $isContactSegment = false): array
     {
         $tableAlias = $this->getRepository()->getTableAlias();
 
-        $entities = $this->getEntities(
-            [
-                'filter' => [
-                    'force'  => [
-                        ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value'=> '%"type": "company_segments"%'], // Whenever Mautic will convert to JSON - make sure this one is uses that feature.
+        if ($isContactSegment) {
+            $tableAlias = $this->listModel->getRepository()->getTableAlias();
+            $entities   = $this->listModel->getEntities(
+                [
+                    'filter' => [
+                        'force'  => [
+                            ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value'=> '%"type";s:16:"company_segments"%'], // Whenever Mautic will convert to JSON - make sure this one is uses that feature.
+                        ],
                     ],
-                ],
-            ]
-        );
+                ]
+            );
+        } else {
+            $entities = $this->getEntities(
+                [
+                    'filter' => [
+                        'force'  => [
+                            ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value'=> '%"type":"company_segments"%'], // Whenever Mautic will convert to JSON - make sure this one is uses that feature.
+                        ],
+                    ],
+                ]
+            );
+        }
 
         $idsNotToBeDeleted   = [];
         $namesNotToBeDeleted = [];
@@ -323,19 +360,24 @@ class CompanySegmentModel extends FormModel
 
         foreach ($entities as $entity) {
             $retrFilters = $entity->getFilters();
+            //            dump($retrFilters);
             foreach ($retrFilters as $eachFilter) {
                 if (self::PROPERTIES_FIELD !== $eachFilter['type']) {
+                    //                    dump('continue');
                     continue;
                 }
 
                 /** @var array<int> $filterValue */
                 $filterValue       = $eachFilter['properties']['filter'];
                 $idsNotToBeDeleted = array_unique(array_merge($idsNotToBeDeleted, $filterValue));
+                //                dump('filterValue: '.print_r($filterValue, true), 'idsNotToBeDeleted: '.print_r($idsNotToBeDeleted, true));
                 foreach ($filterValue as $val) {
                     if (isset($dependency[$val])) {
+                        //                        dump('merge');
                         $dependency[$val] = array_merge($dependency[$val], [$entity->getId()]);
                         $dependency[$val] = array_unique($dependency[$val]);
                     } else {
+                        //                        dump('new');
                         $dependency[$val] = [$entity->getId()];
                     }
                 }
@@ -369,7 +411,7 @@ class CompanySegmentModel extends FormModel
     /**
      * @param iterable<CompanySegment|int|string> $companySegments
      *
-     * @see \Mautic\LeadBundle\Model\ListModel::addLead
+     * @see ListModel::addLead
      */
     public function addCompany(Company $company, iterable $companySegments, bool $manuallyAdded = false, ?\DateTimeInterface $dateTimeManipulated = null): void
     {
@@ -451,7 +493,7 @@ class CompanySegmentModel extends FormModel
     /**
      * @param iterable<CompanySegment|int> $companySegments
      *
-     * @see \Mautic\LeadBundle\Model\ListModel::removeLead
+     * @see ListModel::removeLead
      */
     public function removeCompany(Company $company, iterable $companySegments, bool $manuallyRemoved = false, bool $forceRemove = false): void
     {
