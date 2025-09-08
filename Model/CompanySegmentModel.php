@@ -273,7 +273,7 @@ class CompanySegmentModel extends FormModel
     }
 
     /**
-     * @return array<int, string>
+     * @return array<int, mixed>
      */
     public function getSegmentsWithDependenciesOnSegment(int $segmentId, string $returnProperty = 'name', bool $isContactSegment = false): array
     {

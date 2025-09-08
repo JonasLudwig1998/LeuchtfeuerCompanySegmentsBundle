@@ -41,8 +41,10 @@ class CompanySegmentControllerTest extends MauticMysqlTestCase
         $this->createSegment('Segment Contact Glibi', 'segment-contact-glibi', $filters, true);
 
         $this->client->request('POST', '/s/company-segments/delete/'.$companySegmentGlibi->getId().'?tmpl=list');
+        self::assertIsString($this->client->getResponse()->getContent());
         self::assertStringContainsString('Company Segment cannot be deleted, it is required by segment', $this->client->getResponse()->getContent());
         $this->client->request('POST', '/s/company-segments/view/'.$companySegmentTBS->getId());
+        self::assertIsString($companySegmentTBS->getName());
         self::assertStringContainsString($companySegmentTBS->getName(), $this->client->getResponse()->getContent());
     }
 
@@ -65,6 +67,7 @@ class CompanySegmentControllerTest extends MauticMysqlTestCase
 
         $this->createCompanySegment('Company TBS', 'company-tbs', true, $filters);
         $this->client->request('POST', '/s/company-segments/delete/'.$companySegmentGlibi->getId().'?tmpl=list');
+        self::assertIsString($this->client->getResponse()->getContent());
         self::assertStringContainsString('Company Segment cannot be deleted, it is required by company segment', $this->client->getResponse()->getContent());
     }
 
@@ -72,6 +75,7 @@ class CompanySegmentControllerTest extends MauticMysqlTestCase
     {
         $companySegmentGlibi = $this->createCompanySegment('Company Glibi', 'company-glibi', true);
         $this->client->request('POST', '/s/company-segments/delete/'.$companySegmentGlibi->getId().'?tmpl=list');
+        self::assertIsString($this->client->getResponse()->getContent());
         self::assertStringContainsString('has been deleted!', $this->client->getResponse()->getContent());
     }
 
@@ -111,6 +115,7 @@ class CompanySegmentControllerTest extends MauticMysqlTestCase
         $companySegmentRecord = $this->createCompanySegment('Company Record', 'company-record', true, $filters);
         $url                  = sprintf('/s/company-segments/batchDelete?tmpl=list&ids=["%s","%s"]', $companySegmentGlibi->getId(), $companySegmentTBS->getId());
         $this->client->request('POST', $url);
+        self::assertIsString($this->client->getResponse()->getContent());
         self::assertStringContainsString('cannot be deleted, it is required by other segments.', $this->client->getResponse()->getContent());
         self::assertStringContainsString('cannot be deleted, it is required by other company segments.', $this->client->getResponse()->getContent());
         self::assertStringNotContainsString('has been deleted!', $this->client->getResponse()->getContent());

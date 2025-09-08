@@ -149,7 +149,7 @@ class CompanySegmentApiController extends CommonApiController
                 continue;
             }
 
-            if (!$this->checkEntityAccess($entity, 'delete')) {
+            if (false === $this->checkEntityAccess($entity, 'delete')) {
                 $this->setBatchError($key, 'mautic.core.error.accessdenied', Response::HTTP_FORBIDDEN, $errors, $entities, $entity);
                 continue;
             }
@@ -163,12 +163,17 @@ class CompanySegmentApiController extends CommonApiController
             if (is_string($response->getContent())) {
                 $responseContent = $response->getContent();
             }
+
             $content           = json_decode($responseContent, true);
             if (null === $content || !is_array($content)) {
                 $content = [];
             }
+
             $content['errors'] = $errors;
-            $response->setContent(json_encode($content));
+            $text              = json_encode($content);
+            if (is_string($text)) {
+                $response->setContent($text);
+            }
         }
 
         return $response;

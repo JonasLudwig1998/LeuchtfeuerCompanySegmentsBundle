@@ -80,6 +80,9 @@ trait HelperCompanySegmentTestTrait
         return $company;
     }
 
+    /**
+     * @param array<array<mixed>> $filters
+     */
     private function createCompanySegment(
         string $name = 'Segment test',
         string $alias = 'segment-test',
@@ -124,6 +127,9 @@ trait HelperCompanySegmentTestTrait
         $this->em->flush();
     }
 
+    /**
+     * @param array<array<mixed>> $filters
+     */
     private function createSegment(string $name, string $alias, array $filters = [], bool $isPublished = true): LeadList
     {
         $segment = new LeadList();
