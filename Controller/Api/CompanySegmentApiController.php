@@ -72,20 +72,27 @@ class CompanySegmentApiController extends CommonApiController
      */
     public function deleteEntityAction($id)
     {
-        $entity = $this->model->getEntity($id);
+        $model = $this->getModel(CompanySegmentModel::class);
+        \assert($model instanceof CompanySegmentModel);
+        $entity = $model->getEntity($id);
         if (null !== $entity) {
-            if (!$this->checkEntityAccess($entity, 'delete')) {
+            $access = $this->checkEntityAccess($entity, 'delete');
+
+            if (is_bool($access) && !$access) {
                 return $this->accessDenied();
             }
-            $model = $this->getModel(CompanySegmentModel::class);
-            \assert($model instanceof CompanySegmentModel);
-            $dependents = $model->getSegmentsWithDependenciesOnSegment($id, 'id');
-            if (!empty($dependents)) {
+
+            $dependents = $model->getSegmentsWithDependenciesOnSegment((int)$id, 'id');
+            if ([] !== $dependents) {
                 $errorTranslator = $this->translator->trans('mautic.company_segments.api.error.delete_has_dependencies', ['%segments%' => implode(', ', $dependents)]);
 
-                return $this->returnError($errorTranslator);
+                $returnErrors = $this->returnError($errorTranslator);
+                if ($returnErrors instanceof Response) {
+                    return $returnErrors;
+                }
+                return $this->notFound();
             }
-            parent::deleteEntityAction($id);
+            return parent::deleteEntityAction($id);
         }
 
         return $this->notFound();
@@ -94,7 +101,7 @@ class CompanySegmentApiController extends CommonApiController
     /**
      * Delete a batch of entities.
      *
-     * @return array|Response
+     * @return array<mixed>|Response
      */
     public function deleteEntitiesAction(Request $request)
     {
@@ -114,14 +121,16 @@ class CompanySegmentApiController extends CommonApiController
                 $ids[] = $entity->getId();
             }
         }
-        if (!empty($ids)) {
+        if ([] !== $ids) {
+
             $model = $this->getModel(CompanySegmentModel::class);
             \assert($model instanceof CompanySegmentModel);
             $canNotBeDeleted  = $model->canNotBeDeleted($ids);
             $errorMessage     = $this->translator->trans('mautic.lead.list.error.cannot.delete.batch', ['%segments%' => implode(', ', $canNotBeDeleted)]);
+            $result = [];
             $result['errors'] = $errorMessage;
 
-            return $this->returnError(json_encode($result), Response::HTTP_PRECONDITION_FAILED);
+            return $this->returnError((string)json_encode($result), Response::HTTP_PRECONDITION_FAILED);
         }
 
         $this->inBatchMode = true;
@@ -133,8 +142,9 @@ class CompanySegmentApiController extends CommonApiController
         $response = $this->handleView($view);
 
         foreach ($entities as $key => $entity) {
-            if (null === $entity || !$entity->getId()) {
-                $this->setBatchError($key, 'mautic.core.error.notfound', Response::HTTP_NOT_FOUND, $errors, $entities, $entity);
+            if ( !($entity instanceof CompanySegment) || null === $entity->getId() || 0 === $entity->getId()) {
+                $entityError = $entity instanceof CompanySegment ? $entity : null;
+                $this->setBatchError($key, 'mautic.core.error.notfound', Response::HTTP_NOT_FOUND, $errors, $entities, $entityError);
                 continue;
             }
 
@@ -147,7 +157,7 @@ class CompanySegmentApiController extends CommonApiController
             $this->doctrine->getManager()->detach($entity);
         }
 
-        if (!empty($errors)) {
+        if ([] !== $errors && $response instanceof Response) {
             $content           = json_decode($response->getContent(), true);
             $content['errors'] = $errors;
             $response->setContent(json_encode($content));

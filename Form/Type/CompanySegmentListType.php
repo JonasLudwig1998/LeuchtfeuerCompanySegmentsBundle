@@ -39,6 +39,7 @@ class CompanySegmentListType extends AbstractType
                         $choices[$key] = $companySegment->getId();
                     }
                 }
+                ksort($choices);
 
                 return $choices;
             },
