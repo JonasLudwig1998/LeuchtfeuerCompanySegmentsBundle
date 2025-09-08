@@ -304,66 +304,23 @@ class CompanySegmentModel extends FormModel
 
         $dependents = [];
         $accessor   = PropertyAccess::createPropertyAccessor();
-
         foreach ($entities as $entity) {
             $retrFilters = $entity->getFilters();
-            if (!is_array($retrFilters)) {
-                continue;
-            }
-
             foreach ($retrFilters as $eachFilter) {
-                if (!is_array($eachFilter)) {
-                    continue;
-                }
-
-                $type = $eachFilter['type'] ?? null;
-                if ($type !== self::PROPERTIES_FIELD) {
-                    continue;
-                }
-
-                $props = $eachFilter['properties'] ?? null;
-                $filterValues = (is_array($props) && array_key_exists('filter', $props)) ? $props['filter'] : null;
-                if (!is_array($filterValues)) {
-                    continue;
-                }
-
-                // Normalize potential mixed IDs to integers
-                $normalized = [];
-                foreach ($filterValues as $val) {
-                    if (is_int($val)) {
-                        $normalized[] = $val;
-                    } elseif (is_string($val) && is_numeric($val)) {
-                        $normalized[] = (int) $val;
-                    }
-                }
-                if ($normalized === []) {
-                    continue;
-                }
-
-                if (in_array($segmentId, $normalized, true)) {
+                $filter = $eachFilter['properties']['filter'];
+                if ($filter && self::PROPERTIES_FIELD === $eachFilter['type'] && in_array($segmentId, $filter, true)) {
                     $value = $accessor->getValue($entity, $returnProperty);
-
-                    if ($returnProperty === 'id') {
-                        // Accept int or numeric-string and return as int
-                        if (is_int($value)) {
-                            $dependents[] = $value;
-                        } elseif (is_string($value) && is_numeric($value)) {
-                            $dependents[] = (int) $value;
-                        }
-                    } else {
-                        // Return string-ish properties as strings
-                        if (is_scalar($value)) {
-                            $dependents[] = (string) $value;
-                        }
+                    if (('id' !== $returnProperty && !is_string($value)) || ('id' === $returnProperty && !is_numeric($value))) {
+                        continue; // Return property does not exist.
                     }
-                    break; // move to next entity
+                    $dependents[] = $value;
+                    break;
                 }
             }
         }
 
         return $dependents;
     }
-
 
     /**
      * @param array<int> $segmentIds
