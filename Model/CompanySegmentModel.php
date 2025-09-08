@@ -304,17 +304,59 @@ class CompanySegmentModel extends FormModel
 
         $dependents = [];
         $accessor   = PropertyAccess::createPropertyAccessor();
+
         foreach ($entities as $entity) {
             $retrFilters = $entity->getFilters();
+            if (!is_array($retrFilters)) {
+                continue;
+            }
+
             foreach ($retrFilters as $eachFilter) {
-                $filter = $eachFilter['properties']['filter'];
-                if ($filter && self::PROPERTIES_FIELD === $eachFilter['type'] && in_array($segmentId, $filter, true)) {
-                    $value = $accessor->getValue($entity, $returnProperty);
-                    if (('id' !== $returnProperty && !is_string($value)) || ('id' === $returnProperty && !is_numeric($value))) {
-                        continue; // Return property does not exist.
+                if (!is_array($eachFilter)) {
+                    continue;
+                }
+
+                $type = $eachFilter['type'] ?? null;
+                if ($type !== self::PROPERTIES_FIELD) {
+                    continue;
+                }
+
+                $props = $eachFilter['properties'] ?? null;
+                $filterValues = (is_array($props) && array_key_exists('filter', $props)) ? $props['filter'] : null;
+                if (!is_array($filterValues)) {
+                    continue;
+                }
+
+                // Normalize potential mixed IDs to integers
+                $normalized = [];
+                foreach ($filterValues as $val) {
+                    if (is_int($val)) {
+                        $normalized[] = $val;
+                    } elseif (is_string($val) && is_numeric($val)) {
+                        $normalized[] = (int) $val;
                     }
-                    $dependents[] = $value;
-                    break;
+                }
+                if ($normalized === []) {
+                    continue;
+                }
+
+                if (in_array($segmentId, $normalized, true)) {
+                    $value = $accessor->getValue($entity, $returnProperty);
+
+                    if ($returnProperty === 'id') {
+                        // Accept int or numeric-string and return as int
+                        if (is_int($value)) {
+                            $dependents[] = $value;
+                        } elseif (is_string($value) && is_numeric($value)) {
+                            $dependents[] = (int) $value;
+                        }
+                    } else {
+                        // Return string-ish properties as strings
+                        if (is_scalar($value)) {
+                            $dependents[] = (string) $value;
+                        }
+                    }
+                    break; // move to next entity
                 }
             }
         }
@@ -322,86 +364,14 @@ class CompanySegmentModel extends FormModel
         return $dependents;
     }
 
+
     /**
      * @param array<int> $segmentIds
      *
      * @return array<string>
      */
-    public function canNotBeDeleted(array $segmentIds, bool $isContactSegment = false): array
-    {
-        $tableAlias = $this->getRepository()->getTableAlias();
 
-        if ($isContactSegment) {
-            $tableAlias = $this->listModel->getRepository()->getTableAlias();
-            $entities   = $this->listModel->getEntities(
-                [
-                    'filter' => [
-                        'force'  => [
-                            ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value'=> '%"type";s:16:"company_segments"%'], // Whenever Mautic will convert to JSON - make sure this one is uses that feature.
-                        ],
-                    ],
-                ]
-            );
-        } else {
-            $entities = $this->getEntities(
-                [
-                    'filter' => [
-                        'force'  => [
-                            ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value'=> '%"type":"company_segments"%'], // Whenever Mautic will convert to JSON - make sure this one is uses that feature.
-                        ],
-                    ],
-                ]
-            );
-        }
 
-        $idsNotToBeDeleted   = [];
-        $namesNotToBeDeleted = [];
-        $dependency          = [];
-
-        foreach ($entities as $entity) {
-            $retrFilters = $entity->getFilters();
-            foreach ($retrFilters as $eachFilter) {
-                if (self::PROPERTIES_FIELD !== $eachFilter['type']) {
-                    continue;
-                }
-
-                /** @var array<int> $filterValue */
-                $filterValue       = $eachFilter['properties']['filter'];
-                $idsNotToBeDeleted = array_unique(array_merge($idsNotToBeDeleted, $filterValue));
-                foreach ($filterValue as $val) {
-                    if (isset($dependency[$val])) {
-                        $dependency[$val] = array_merge($dependency[$val], [$entity->getId()]);
-                        $dependency[$val] = array_unique($dependency[$val]);
-                    } else {
-                        $dependency[$val] = [$entity->getId()];
-                    }
-                }
-            }
-        }
-
-        foreach ($dependency as $key => $value) {
-            if (array_intersect($value, $segmentIds) === $value) {
-                $idsNotToBeDeleted = array_unique(array_diff($idsNotToBeDeleted, [$key]));
-            }
-        }
-
-        $idsNotToBeDeleted = array_intersect($segmentIds, $idsNotToBeDeleted);
-
-        foreach ($idsNotToBeDeleted as $val) {
-            $notToBeDeletedEntity = $this->getEntity($val);
-            assert($notToBeDeletedEntity instanceof CompanySegment);
-
-            $name = $notToBeDeletedEntity->getName();
-
-            if (null === $name) {
-                continue;
-            }
-
-            $namesNotToBeDeleted[$val] = $name;
-        }
-
-        return $namesNotToBeDeleted;
-    }
 
     /**
      * @param iterable<CompanySegment|int|string> $companySegments
