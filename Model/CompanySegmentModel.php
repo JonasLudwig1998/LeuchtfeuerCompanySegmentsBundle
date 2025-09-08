@@ -327,8 +327,88 @@ class CompanySegmentModel extends FormModel
      *
      * @return array<string>
      */
+    public function canNotBeDeleted(array $segmentIds, bool $isContactSegment = false): array
+    {
+        $tableAlias = $this->getRepository()->getTableAlias();
+
+        if ($isContactSegment) {
+            $tableAlias = $this->listModel->getRepository()->getTableAlias();
+            $entities = $this->listModel->getEntities(
+                [
+                    'filter' => [
+                        'force'  => [
+                            ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value'=> '%"type";s:16:"company_segments"%'], // Whenever Mautic will convert to JSON - make sure this one is uses that feature.
+                        ],
+                    ],
+                ]
+            );
+        }else {
+            $entities = $this->getEntities(
+                [
+                    'filter' => [
+                        'force'  => [
+                            ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value'=> '%"type":"company_segments"%'], // Whenever Mautic will convert to JSON - make sure this one is uses that feature.
+                        ],
+                    ],
+                ]
+            );
+        }
 
 
+        $idsNotToBeDeleted   = [];
+        $namesNotToBeDeleted = [];
+        $dependency          = [];
+
+        foreach ($entities as $entity) {
+            $retrFilters = $entity->getFilters();
+//            dump($retrFilters);
+            foreach ($retrFilters as $eachFilter) {
+
+                if (self::PROPERTIES_FIELD !== $eachFilter['type']) {
+//                    dump('continue');
+                    continue;
+                }
+
+                /** @var array<int> $filterValue */
+                $filterValue       = $eachFilter['properties']['filter'];
+                $idsNotToBeDeleted = array_unique(array_merge($idsNotToBeDeleted, $filterValue));
+//                dump('filterValue: '.print_r($filterValue, true), 'idsNotToBeDeleted: '.print_r($idsNotToBeDeleted, true));
+                foreach ($filterValue as $val) {
+                    if (isset($dependency[$val])) {
+//                        dump('merge');
+                        $dependency[$val] = array_merge($dependency[$val], [$entity->getId()]);
+                        $dependency[$val] = array_unique($dependency[$val]);
+                    } else {
+//                        dump('new');
+                        $dependency[$val] = [$entity->getId()];
+                    }
+                }
+            }
+        }
+
+        foreach ($dependency as $key => $value) {
+            if (array_intersect($value, $segmentIds) === $value) {
+                $idsNotToBeDeleted = array_unique(array_diff($idsNotToBeDeleted, [$key]));
+            }
+        }
+
+        $idsNotToBeDeleted = array_intersect($segmentIds, $idsNotToBeDeleted);
+
+        foreach ($idsNotToBeDeleted as $val) {
+            $notToBeDeletedEntity = $this->getEntity($val);
+            assert($notToBeDeletedEntity instanceof CompanySegment);
+
+            $name = $notToBeDeletedEntity->getName();
+
+            if (null === $name) {
+                continue;
+            }
+
+            $namesNotToBeDeleted[$val] = $name;
+        }
+
+        return $namesNotToBeDeleted;
+    }
 
     /**
      * @param iterable<CompanySegment|int|string> $companySegments
