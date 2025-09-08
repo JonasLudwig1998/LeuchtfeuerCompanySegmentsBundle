@@ -333,7 +333,7 @@ class CompanySegmentModel extends FormModel
 
         if ($isContactSegment) {
             $tableAlias = $this->listModel->getRepository()->getTableAlias();
-            $entities = $this->listModel->getEntities(
+            $entities   = $this->listModel->getEntities(
                 [
                     'filter' => [
                         'force'  => [
@@ -342,7 +342,7 @@ class CompanySegmentModel extends FormModel
                     ],
                 ]
             );
-        }else {
+        } else {
             $entities = $this->getEntities(
                 [
                     'filter' => [
@@ -354,32 +354,30 @@ class CompanySegmentModel extends FormModel
             );
         }
 
-
         $idsNotToBeDeleted   = [];
         $namesNotToBeDeleted = [];
         $dependency          = [];
 
         foreach ($entities as $entity) {
             $retrFilters = $entity->getFilters();
-//            dump($retrFilters);
+            //            dump($retrFilters);
             foreach ($retrFilters as $eachFilter) {
-
                 if (self::PROPERTIES_FIELD !== $eachFilter['type']) {
-//                    dump('continue');
+                    //                    dump('continue');
                     continue;
                 }
 
                 /** @var array<int> $filterValue */
                 $filterValue       = $eachFilter['properties']['filter'];
                 $idsNotToBeDeleted = array_unique(array_merge($idsNotToBeDeleted, $filterValue));
-//                dump('filterValue: '.print_r($filterValue, true), 'idsNotToBeDeleted: '.print_r($idsNotToBeDeleted, true));
+                //                dump('filterValue: '.print_r($filterValue, true), 'idsNotToBeDeleted: '.print_r($idsNotToBeDeleted, true));
                 foreach ($filterValue as $val) {
                     if (isset($dependency[$val])) {
-//                        dump('merge');
+                        //                        dump('merge');
                         $dependency[$val] = array_merge($dependency[$val], [$entity->getId()]);
                         $dependency[$val] = array_unique($dependency[$val]);
                     } else {
-//                        dump('new');
+                        //                        dump('new');
                         $dependency[$val] = [$entity->getId()];
                     }
                 }
