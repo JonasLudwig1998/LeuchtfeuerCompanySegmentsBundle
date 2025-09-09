@@ -376,7 +376,7 @@ class CompanySegmentModel extends FormModel
         }
 
         $idsNotToBeDeleted = array_intersect($segmentIds, $idsNotToBeDeleted);
-        dump(' idsNotToBeDeleted '.$idsNotToBeDeleted);
+        dump(' idsNotToBeDeleted ',$idsNotToBeDeleted);
 
         foreach ($idsNotToBeDeleted as $val) {
             dump(' val '.$val);
