@@ -327,7 +327,7 @@ class CompanySegmentModel extends FormModel
 
         $tableAlias = $this->getRepository()->getTableAlias();
 
-        
+
         $entities = $this->getEntities(
             [
                 'filter' => [
