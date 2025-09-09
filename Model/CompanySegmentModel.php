@@ -331,7 +331,9 @@ class CompanySegmentModel extends FormModel
             [
                 'filter' => [
                     'force'  => [
-                        ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value'=> '%"type":"company_segments"%'], // Whenever Mautic will convert to JSON - make sure this one is uses that feature.
+//                        ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value'=> '%"type":"company_segments"%'], // Whenever Mautic will convert to JSON - make sure this one is uses that feature.
+                        ['column' => $tableAlias.'.filters', 'expr' => 'REGEXP', 'value' => '"type"[[:space:]]*:[[:space:]]*"company_segments"'],
+
                     ],
                 ],
             ]
@@ -408,7 +410,8 @@ class CompanySegmentModel extends FormModel
             [
                 'filter' => [
                     'force'  => [
-                        ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value'=> '%"type";s:16:"company_segments"%'], // Whenever Mautic will convert to JSON - make sure this one is uses that feature.
+//                        ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value'=> '%"type";s:16:"company_segments"%'], // Whenever Mautic will convert to JSON - make sure this one is uses that feature.
+                        ['column' => $tableAlias.'.filters', 'expr' => 'REGEXP', 'value' => '"type"[[:space:]]*:[[:space:]]*"company_segments"'],
                     ],
                 ],
             ]
