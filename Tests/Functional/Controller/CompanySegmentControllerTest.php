@@ -113,6 +113,7 @@ class CompanySegmentControllerTest extends MauticMysqlTestCase
         ];
 
         $companySegmentRecord = $this->createCompanySegment('Company Record', 'company-record', true, $filters);
+        dump($companySegmentGlibi->getId(), $companySegmentTBS->getId(),$companySegmentRecord->getId(),'---');
         $url                  = sprintf('/s/company-segments/batchDelete?tmpl=list&ids=["%s","%s"]', $companySegmentGlibi->getId(), $companySegmentTBS->getId());
         $this->client->request('POST', $url);
         self::assertIsString($this->client->getResponse()->getContent());

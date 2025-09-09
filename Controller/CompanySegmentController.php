@@ -507,7 +507,8 @@ class CompanySegmentController extends AbstractStandardFormController
                 throw new BadRequestHttpException('Invalid ids parameter.');
             }
 
-            $canNotBeDeletedCompanySegment = $model->canNotBeDeleted($ids);
+            $canNotBeDeletedCompanySegment = $model->canNotBeDeletedByCompanySegments($ids);
+            dump($canNotBeDeletedCompanySegment);
 
             if (0 !== count($canNotBeDeletedCompanySegment)) {
                 $flashes[] = [
@@ -517,7 +518,7 @@ class CompanySegmentController extends AbstractStandardFormController
                 ];
             }
 
-            $canNotBeDeletedContactSegment = $model->canNotBeDeleted($ids, true);
+            $canNotBeDeletedContactSegment = $model->canNotBeDeletedByLeadSegments($ids);
 
             if (0 !== count($canNotBeDeletedContactSegment)) {
                 $flashes[] = [
