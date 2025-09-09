@@ -333,10 +333,10 @@ class CompanySegmentModel extends FormModel
                 'filter' => [
                     'force' => [
                         ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value' => '%"type":"company_segments"%'],
-                        ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value' => '%"type";s:16:"company_segments"%'],
                     ],
                     'glue' => 'or',
                 ],
+
 
             ]
         );
