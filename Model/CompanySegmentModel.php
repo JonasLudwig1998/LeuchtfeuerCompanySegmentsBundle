@@ -392,6 +392,7 @@ class CompanySegmentModel extends FormModel
             $namesNotToBeDeleted[$val] = $name;
         }
         dump('aaa',$namesNotToBeDeleted);
+
         return $namesNotToBeDeleted;
 
     }
