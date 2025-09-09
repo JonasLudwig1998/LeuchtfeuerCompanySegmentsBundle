@@ -330,14 +330,14 @@ class CompanySegmentModel extends FormModel
     public function canNotBeDeleted(array $segmentIds, bool $isContactSegment = false): array
     {
         $tableAlias = $this->getRepository()->getTableAlias();
-
+        $segmentIds = array_map('intval', $segmentIds);
         if ($isContactSegment) {
             $tableAlias = $this->listModel->getRepository()->getTableAlias();
             $entities   = $this->listModel->getEntities(
                 [
                     'filter' => [
                         'force'  => [
-                            ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value'=> '%s:16:"company_segments"%'], // Whenever Mautic will convert to JSON - make sure this one is uses that feature.
+                            ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value'=> '%"type";s:16:"company_segments"%'], // Whenever Mautic will convert to JSON - make sure this one is uses that feature.
                         ],
                     ],
                 ]
@@ -356,41 +356,45 @@ class CompanySegmentModel extends FormModel
 
         $idsNotToBeDeleted   = [];
         $namesNotToBeDeleted = [];
-        $dependency          = [];
+        $filterRegistered          = [];
 
         foreach ($entities as $entity) {
             $retrFilters = $entity->getFilters();
             //            dump($retrFilters);
             foreach ($retrFilters as $eachFilter) {
                 if (self::PROPERTIES_FIELD !== $eachFilter['type']) {
-                    //                    dump('continue');
                     continue;
                 }
-
+                dump('----------',$segmentIds,$entity->getId());
                 /** @var array<int> $filterValue */
                 $filterValue       = $eachFilter['properties']['filter'];
-                $idsNotToBeDeleted = array_unique(array_merge($idsNotToBeDeleted, $filterValue));
-                //                dump('filterValue: '.print_r($filterValue, true), 'idsNotToBeDeleted: '.print_r($idsNotToBeDeleted, true));
-                foreach ($filterValue as $val) {
-                    if (isset($dependency[$val])) {
-                        //                        dump('merge');
-                        $dependency[$val] = array_merge($dependency[$val], [$entity->getId()]);
-                        $dependency[$val] = array_unique($dependency[$val]);
-                    } else {
-                        //                        dump('new');
-                        $dependency[$val] = [$entity->getId()];
+                dump($filterValue);
+//                $idsNotToBeDeleted = array_unique(array_merge($idsNotToBeDeleted, $filterValue));
+                $idsNotToBeDeleted = $this->addIdsNotToBeDeleted($idsNotToBeDeleted, $filterValue);
+                dump($idsNotToBeDeleted);
+                foreach ($filterValue as $valFilter) {
+                    if(!isset($filterRegistered[$valFilter])){
+                        $filterRegistered[$valFilter][] = (int)$entity->getId();
+                        continue;
                     }
+                    if(in_array($entity->getId(), $filterRegistered[$valFilter], true)){
+                        continue;
+                    }
+                    $filterRegistered[$valFilter][] = (int)$entity->getId();
                 }
             }
         }
+        dump($filterRegistered);
 
-        foreach ($dependency as $key => $value) {
+        foreach ($filterRegistered as $keyValueFilter => $value) {
             if (array_intersect($value, $segmentIds) === $value) {
-                $idsNotToBeDeleted = array_unique(array_diff($idsNotToBeDeleted, [$key]));
+                $idsNotToBeDeleted = array_unique(array_diff($idsNotToBeDeleted, [$keyValueFilter]));
             }
         }
+        dump($idsNotToBeDeleted);
 
         $idsNotToBeDeleted = array_intersect($segmentIds, $idsNotToBeDeleted);
+        dump($idsNotToBeDeleted,'===================');
 
         foreach ($idsNotToBeDeleted as $val) {
             $notToBeDeletedEntity = $this->getEntity($val);
@@ -399,13 +403,32 @@ class CompanySegmentModel extends FormModel
             $name = $notToBeDeletedEntity->getName();
 
             if (null === $name) {
-                continue;
+                $name = 'N/A';
             }
 
             $namesNotToBeDeleted[$val] = $name;
         }
 
         return $namesNotToBeDeleted;
+    }
+
+    private function addIdsNotToBeDeleted(array $idsNotToBeDeleted, array $newIds): array
+    {
+        if (!is_array($idsNotToBeDeleted) || !is_array($newIds)) {
+            return [];
+        }
+        foreach ($newIds as $id) {
+            if (!is_numeric($id)) {
+                continue;
+            }
+            $id = (int) $id;
+            if (in_array($id, $idsNotToBeDeleted, true)) {
+                continue;
+            }
+            $idsNotToBeDeleted[] = $id;
+        }
+        return $idsNotToBeDeleted;
+
     }
 
     /**
