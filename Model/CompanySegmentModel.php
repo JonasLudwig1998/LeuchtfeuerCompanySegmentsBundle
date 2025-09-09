@@ -337,6 +337,8 @@ class CompanySegmentModel extends FormModel
             ]
         );
 
+        dump('entities',count($entities),$entities->getQuery());
+
         if ([] === $entities) {
             return [];
         }
