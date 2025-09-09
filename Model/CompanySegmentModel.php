@@ -334,12 +334,25 @@ class CompanySegmentModel extends FormModel
                     'force' => [
                         ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value' => '%"type":"company_segments"%'],
                     ],
-                    'glue' => 'or',
                 ],
 
 
             ]
         );
+        if ([]=== $entities) {
+            $entities = $this->getEntities(
+                [
+                    'filter' => [
+                        'force' => [
+                            // Optional serialized fallback if you still have legacy rows:
+                            ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value' => '%"type";s:16:"company_segments"%'],
+                        ],
+                    ],
+
+
+                ]
+            );
+        }
 
         dump('entities',count($entities),$entities->getQuery());
 
