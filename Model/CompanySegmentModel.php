@@ -341,11 +341,13 @@ class CompanySegmentModel extends FormModel
             return [];
         }
 
+
         $idsNotToBeDeleted   = [];
         $namesNotToBeDeleted = [];
         $filterRegistered          = [];
 
         foreach ($entities as $entity) {
+            dump('Entity '.$entity->getId());
             $retrFilters = $entity->getFilters();
             foreach ($retrFilters as $eachFilter) {
                 if (self::PROPERTIES_FIELD !== $eachFilter['type']) {
@@ -374,8 +376,10 @@ class CompanySegmentModel extends FormModel
         }
 
         $idsNotToBeDeleted = array_intersect($segmentIds, $idsNotToBeDeleted);
+        dump(' idsNotToBeDeleted '.$idsNotToBeDeleted);
 
         foreach ($idsNotToBeDeleted as $val) {
+            dump(' val '.$val);
             $notToBeDeletedEntity = $this->getEntity($val);
             assert($notToBeDeletedEntity instanceof CompanySegment);
 
@@ -387,7 +391,7 @@ class CompanySegmentModel extends FormModel
 
             $namesNotToBeDeleted[$val] = $name;
         }
-
+        dump('aaa',$namesNotToBeDeleted);
         return $namesNotToBeDeleted;
 
     }
