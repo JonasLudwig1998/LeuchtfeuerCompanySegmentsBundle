@@ -445,7 +445,7 @@ class CompanySegmentModel extends FormModel
 
             $idsNotToBeDeleted = array_intersect($segmentIds, $idsNotToBeDeleted);
             foreach ($idsNotToBeDeleted as $val) {
-                dump($val);
+                dump(' idsNotToBeDeleted '.$val);
                 $notToBeDeletedEntity = $this->getEntity($val);
                 assert($notToBeDeletedEntity instanceof CompanySegment);
                 $name = $notToBeDeletedEntity->getName();
