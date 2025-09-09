@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Model;
 
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\MariaDBPlatform;
 use Doctrine\ORM\EntityManagerInterface;
+use Mautic\CoreBundle\Doctrine\DatabasePlatform;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\CoreBundle\Helper\DateTimeHelper;
 use Mautic\CoreBundle\Helper\ProgressBarHelper;
@@ -75,6 +78,7 @@ class CompanySegmentModel extends FormModel
         private RequestStack $requestStack,
         private CompanySegmentService $companySegmentService,
         private ListModel $listModel,
+        protected Connection $connection,
     ) {
         parent::__construct($em, $security, $dispatcher, $router, $translator, $userHelper, $logger, $coreParametersHelper);
     }
@@ -327,32 +331,25 @@ class CompanySegmentModel extends FormModel
 
         $tableAlias = $this->getRepository()->getTableAlias();
 
+        $platform = $this->connection->getDatabasePlatform();
+        $isMaria = $platform instanceof MariaDbPlatform;
 
+
+        $columnForce = ['column' => "JSON_UNQUOTE(FUNCTION('JSON_EXTRACT', ".$tableAlias.".filters, '$.type'))", 'expr' => '=', 'value' => 'company_segments'];
+        if ($isMaria) {
+            $columnForce = ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value' => '%"type":"company_segments"%'];
+        }
         $entities = $this->getEntities(
             [
                 'filter' => [
                     'force' => [
-                        ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value' => '%"type":"company_segments"%'],
+                        $columnForce
                     ],
                 ],
 
 
             ]
         );
-        if ([]=== $entities) {
-            $entities = $this->getEntities(
-                [
-                    'filter' => [
-                        'force' => [
-                            // Optional serialized fallback if you still have legacy rows:
-                            ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value' => '%"type";s:16:"company_segments"%'],
-                        ],
-                    ],
-
-
-                ]
-            );
-        }
 
         dump('entities',count($entities),$entities->getQuery());
 
