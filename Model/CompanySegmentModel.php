@@ -335,7 +335,7 @@ class CompanySegmentModel extends FormModel
         $isMaria = $platform instanceof MariaDbPlatform;
 
 
-        $columnForce = ['column' => "JSON_UNQUOTE(FUNCTION('JSON_EXTRACT', ".$tableAlias.".filters, '$.type'))", 'expr' => '=', 'value' => 'company_segments'];
+        $columnForce = ['column' => 'CAST('.$tableAlias.'.filters AS CHAR)', 'expr' => 'LIKE', 'value' => '%"type":"company_segments"%'];
         if ($isMaria) {
             $columnForce = ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value' => '%"type":"company_segments"%'];
         }
