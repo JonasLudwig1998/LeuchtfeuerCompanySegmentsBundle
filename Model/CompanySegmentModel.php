@@ -326,7 +326,7 @@ class CompanySegmentModel extends FormModel
         return $dependents;
     }
 
-    public function canNotBeDeletedByCompanySegments(array $segmentIds)
+        public function canNotBeDeletedByCompanySegments(array $segmentIds)
     {
 
         $tableAlias = $this->getRepository()->getTableAlias();
@@ -346,8 +346,6 @@ class CompanySegmentModel extends FormModel
                         $columnForce
                     ],
                 ],
-
-
             ]
         );
 
@@ -417,12 +415,17 @@ class CompanySegmentModel extends FormModel
     public function canNotBeDeletedByLeadSegments(array $segmentIds)
     {
         $tableAlias = $this->listModel->getRepository()->getTableAlias();
-
+        $platform = $this->connection->getDatabasePlatform();
+        $isMaria = $platform instanceof MariaDbPlatform;
+        $columnForce = ['column' => 'CAST('.$tableAlias.'.filters AS CHAR)', 'expr' => 'LIKE', 'value' => '%"type";s:16:"company_segments"%'];
+        if ($isMaria) {
+            $columnForce = ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value' => '%"type";s:16:"company_segments"%'];
+        }
         $entities   = $this->listModel->getEntities(
             [
                 'filter' => [
                     'force'  => [
-                        ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value'=> '%"type";s:16:"company_segments"%'], // Whenever Mautic will convert to JSON - make sure this one is uses that feature.
+                        $columnForce
                     ],
                 ],
             ]
