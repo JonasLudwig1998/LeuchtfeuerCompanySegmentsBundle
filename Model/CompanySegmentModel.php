@@ -392,6 +392,7 @@ class CompanySegmentModel extends FormModel
 
     }
 
+
     public function canNotBeDeletedByLeadSegments(array $segmentIds)
     {
         $tableAlias = $this->listModel->getRepository()->getTableAlias();
