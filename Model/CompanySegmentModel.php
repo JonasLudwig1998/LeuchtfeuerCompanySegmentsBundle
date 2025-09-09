@@ -330,12 +330,13 @@ class CompanySegmentModel extends FormModel
         $entities = $this->getEntities(
             [
                 'filter' => [
-                    'force'  => [
-//                        ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value'=> '%"type":"company_segments"%'], // Whenever Mautic will convert to JSON - make sure this one is uses that feature.
-                        ['column' => $tableAlias.'.filters', 'expr' => 'REGEXP', 'value' => '"type"[[:space:]]*:[[:space:]]*"company_segments"'],
-
+                    'force' => [
+                        ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value' => '%"type":"company_segments"%'],
+                        ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value' => '%"type";s:16:"company_segments"%'],
                     ],
+                    'glue' => 'or',
                 ],
+
             ]
         );
 
@@ -409,10 +410,11 @@ class CompanySegmentModel extends FormModel
         $entities   = $this->listModel->getEntities(
             [
                 'filter' => [
-                    'force'  => [
-//                        ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value'=> '%"type";s:16:"company_segments"%'], // Whenever Mautic will convert to JSON - make sure this one is uses that feature.
-                        ['column' => $tableAlias.'.filters', 'expr' => 'REGEXP', 'value' => '"type"[[:space:]]*:[[:space:]]*"company_segments"'],
+                    'force' => [
+                        ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value' => '%"type":"company_segments"%'],
+                        ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value' => '%"type";s:16:"company_segments"%'],
                     ],
+                    'glue' => 'or',
                 ],
             ]
         );
