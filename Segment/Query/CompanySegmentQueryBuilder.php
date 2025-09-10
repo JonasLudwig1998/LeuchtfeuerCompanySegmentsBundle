@@ -36,6 +36,7 @@ class CompanySegmentQueryBuilder
         private CompanySegmentRepository $companySegmentRepository,
         private RandomParameterName $randomParameterName,
         private EventDispatcherInterface $dispatcher,
+        private \Psr\Log\LoggerInterface $logger,
     ) {
     }
 
@@ -71,8 +72,13 @@ class CompanySegmentQueryBuilder
             if ($this->dispatchPluginFilteringEvent($filter, $queryBuilder)) {
                 continue;
             }
+            try {
+                $queryBuilder = $filter->applyQuery($queryBuilder);
+            } catch (\Exception $e) {
+                $this->logger->error('Error in filter: '.$e->getMessage(), ['exception' => $e]);
+                continue;
+            }
 
-            $queryBuilder = $filter->applyQuery($queryBuilder);
             // We need to collect params between union queries in this iteration,
             // because they are overwritten by new union query build
             $params     = array_merge($params, $queryBuilder->getParameters());
