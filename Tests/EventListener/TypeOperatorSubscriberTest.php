@@ -492,7 +492,7 @@ class TypeOperatorSubscriberTest extends TestCase
                 ],
                 'object' => 'company',
             ],
-            $choices['company_segments']['date_added']
+            $choices['company']['date_added']
         );
 
         self::assertSame(
@@ -507,7 +507,7 @@ class TypeOperatorSubscriberTest extends TestCase
                 ],
                 'object' => 'company',
             ],
-            $choices['company_segments']['date_modified']
+            $choices['company']['date_modified']
         );
 
         self::assertSame(
