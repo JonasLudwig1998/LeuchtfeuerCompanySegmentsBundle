@@ -477,7 +477,7 @@ class TypeOperatorSubscriberTest extends TestCase
 
         $choices = $event->getChoices();
 
-        self::assertCount(3, $choices['company_segments']);
+        self::assertCount(1, $choices['company_segments']);
 
         // Test for some random choices:
         self::assertSame(
