@@ -74,7 +74,7 @@ class SegmentReferenceFilterQueryBuilder extends BaseFilterQueryBuilder implemen
         \assert(is_string($companiesTableAlias));
         $segmentIds = $filter->getParameterValue();
 
-        \assert(is_array($segmentIds) || is_numeric($segmentIds) || (null === $segmentIds && $filter->getOperator() === 'empty'));
+        \assert(is_array($segmentIds) || is_numeric($segmentIds) || (null === $segmentIds && 'empty' === $filter->getOperator()));
 
         if (!is_array($segmentIds)) {
             $segmentIds = [(int) $segmentIds];

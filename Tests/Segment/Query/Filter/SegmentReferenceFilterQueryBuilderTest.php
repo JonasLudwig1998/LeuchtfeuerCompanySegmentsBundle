@@ -61,6 +61,11 @@ class SegmentReferenceFilterQueryBuilderTest extends MauticMysqlTestCase
 
     private CompanySegment $segment;
 
+    /**
+     * @var MockObject&\Psr\Log\LoggerInterface
+     */
+    private MockObject $loggerMock;
+
     public function setUp(): void
     {
         parent::setUp();
@@ -68,6 +73,7 @@ class SegmentReferenceFilterQueryBuilderTest extends MauticMysqlTestCase
         $this->companySegmentRepositoryMock = $this->createMock(CompanySegmentRepository::class);
         $this->randomParameterMock          = $this->createMock(RandomParameterName::class);
         $this->dispatcherMock               = $this->createMock(EventDispatcherInterface::class);
+        $this->loggerMock                   = $this->createMock(\Psr\Log\LoggerInterface::class);
         $mockedConnection                   = $this->getMockedConnection();
         self::assertInstanceOf(Connection::class, $mockedConnection);
         self::assertInstanceOf(MockObject::class, $mockedConnection);
@@ -75,7 +81,7 @@ class SegmentReferenceFilterQueryBuilderTest extends MauticMysqlTestCase
 
         $this->queryBuilder = new SegmentReferenceFilterQueryBuilder(
             $this->randomParameterMock,
-            new CompanySegmentQueryBuilder($this->em, $this->companyRepositoryMock, $this->companySegmentRepositoryMock, $this->randomParameterMock, $this->dispatcherMock),
+            new CompanySegmentQueryBuilder($this->em, $this->companyRepositoryMock, $this->companySegmentRepositoryMock, $this->randomParameterMock, $this->dispatcherMock, $this->loggerMock),
             $this->em,
             $this->createMock(ContactSegmentFilterFactory::class), // probably
             $this->dispatcherMock

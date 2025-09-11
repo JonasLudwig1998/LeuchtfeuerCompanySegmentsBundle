@@ -72,11 +72,18 @@ class CompanySegmentQueryBuilder
             if ($this->dispatchPluginFilteringEvent($filter, $queryBuilder)) {
                 continue;
             }
+
             try {
                 $queryBuilder = $filter->applyQuery($queryBuilder);
-            } catch (\Exception $e) {
-                $this->logger->error('Error in filter: '.$e->getMessage(), ['exception' => $e]);
+                // If we get here, the table is valid
+            } catch (\Mautic\LeadBundle\Segment\Exception\TableNotFoundException $e) {
+                $this->logger->notice('Error in filter, table '.$filter->contactSegmentFilterCrate->getObject().' not found: '.$e->getMessage());
                 continue;
+                // Invalid table
+            } catch (\Mautic\LeadBundle\Segment\Exception\FieldNotFoundException $e) {
+                $this->logger->notice('Error in filter, field '.$filter->contactSegmentFilterCrate->getField().' not found: '.$e->getMessage());
+                continue;
+                // Table exists but field does not
             }
 
             // We need to collect params between union queries in this iteration,
