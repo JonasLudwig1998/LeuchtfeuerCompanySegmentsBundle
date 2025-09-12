@@ -16,13 +16,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php-versions: ['8.2', '8.3']
+        php-versions: ['8.0', '8.1' , '8.2', '8.3']
         db-types: ['mysql', 'mariadb']
-        mautic-versions: ['5.2']
+        mautic-versions: ['5.0', '5.1', '5.x', '5.2']
         include:
-          - mautic-versions: 5.2
+          - mautic-versions: 5.1
             php-versions: 8.2
-          - mautic-versions: 5.2
+          - mautic-versions: 5.x
+            php-versions: 8.2
+          - mautic-versions: 5.x
             php-versions: 8.3
         exclude:
           - mautic-versions: 5.x # 5.2 will not support php-8.0
