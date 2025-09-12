@@ -508,7 +508,6 @@ class CompanySegmentController extends AbstractStandardFormController
             }
 
             $canNotBeDeletedCompanySegment = $model->canNotBeDeletedByCompanySegments($ids);
-            dump('cannotbedeleted', $canNotBeDeletedCompanySegment);
 
             if (0 !== count($canNotBeDeletedCompanySegment)) {
                 $flashes[] = [

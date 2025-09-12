@@ -82,7 +82,6 @@ class CompanySegmentApiController extends CommonApiController
                 return $this->accessDenied();
             }
 
-
             $dependents = $model->getSegmentsWithDependenciesOnSegment((int) $id, 'id');
             if ([] !== $dependents) {
                 $errorTranslator = $this->translator->trans('mautic.company_segments.api.error.delete_has_dependencies', ['%segments%' => implode(', ', $dependents)]);

@@ -113,11 +113,9 @@ class CompanySegmentControllerTest extends MauticMysqlTestCase
         ];
 
         $companySegmentRecord = $this->createCompanySegment('Company Record', 'company-record', true, $filters);
-        dump($companySegmentGlibi->getId(), $companySegmentTBS->getId(),$companySegmentRecord->getId(),'---');
         $url                  = sprintf('/s/company-segments/batchDelete?tmpl=list&ids=["%s","%s"]', $companySegmentGlibi->getId(), $companySegmentTBS->getId());
         $this->client->request('POST', $url);
         self::assertIsString($this->client->getResponse()->getContent());
-
         self::assertStringContainsString('cannot be deleted, it is required by other segments.', $this->client->getResponse()->getContent());
         self::assertStringContainsString('cannot be deleted, it is required by other company segments.', $this->client->getResponse()->getContent());
         self::assertStringNotContainsString('has been deleted!', $this->client->getResponse()->getContent());

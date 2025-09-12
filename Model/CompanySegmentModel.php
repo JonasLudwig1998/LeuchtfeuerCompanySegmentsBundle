@@ -7,7 +7,6 @@ namespace MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Model;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\MariaDBPlatform;
 use Doctrine\ORM\EntityManagerInterface;
-use Mautic\CoreBundle\Doctrine\DatabasePlatform;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\CoreBundle\Helper\DateTimeHelper;
 use Mautic\CoreBundle\Helper\ProgressBarHelper;
@@ -292,7 +291,7 @@ class CompanySegmentModel extends FormModel
                     'expr'   => 'LIKE',
                     'value'  => $isContactSegment
                         ? '%"type";s:16:"company_segments"%'
-                        : '%"type":"company_segments"%',
+                        : $this->getLikeQueryCompanySegment(),
                 ],
                 [
                     'column' => $tableAlias.'.id',
@@ -305,7 +304,6 @@ class CompanySegmentModel extends FormModel
         $entities = $isContactSegment
             ? $this->listModel->getEntities(['filter' => $filter])
             : $this->getEntities(['filter' => $filter]);
-
         $dependents = [];
         $accessor   = PropertyAccess::createPropertyAccessor();
         foreach ($entities as $entity) {
@@ -326,42 +324,38 @@ class CompanySegmentModel extends FormModel
         return $dependents;
     }
 
-        public function canNotBeDeletedByCompanySegments(array $segmentIds)
+    /**
+     * @param array<int> $segmentIds
+     *
+     * @return array<string>
+     */
+    public function canNotBeDeletedByCompanySegments(array $segmentIds): array
     {
-
         $tableAlias = $this->getRepository()->getTableAlias();
 
-        $platform = $this->connection->getDatabasePlatform();
-        $isMaria = $platform instanceof MariaDbPlatform;
-
-
-        $columnForce = ['column' => "JSON_UNQUOTE(FUNCTION('JSON_EXTRACT', ".$tableAlias.".filters, '$'))", 'expr' => 'LIKE', 'value' => '%\"type\":\"company_segments\"%'];
-        if ($isMaria) {
-            $columnForce = ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value' => '%"type":"company_segments"%'];
-        }
         $entities = $this->getEntities(
             [
                 'filter' => [
                     'force' => [
-                        $columnForce
+                        [
+                            'column' => $tableAlias.'.filters',
+                            'expr'   => 'LIKE',
+                            'value'  => $this->getLikeQueryCompanySegment(),
+                        ],
                     ],
                 ],
             ]
         );
 
-        dump('entities',count($entities),$entities->getQuery());
-
         if ([] === $entities) {
             return [];
         }
 
-
-        $idsNotToBeDeleted   = [];
-        $namesNotToBeDeleted = [];
+        $idsNotToBeDeleted         = [];
+        $namesNotToBeDeleted       = [];
         $filterRegistered          = [];
 
         foreach ($entities as $entity) {
-            dump('Entity '.$entity->getId());
             $retrFilters = $entity->getFilters();
             foreach ($retrFilters as $eachFilter) {
                 if (self::PROPERTIES_FIELD !== $eachFilter['type']) {
@@ -371,14 +365,14 @@ class CompanySegmentModel extends FormModel
                 $filterValue       = $eachFilter['properties']['filter'];
                 $idsNotToBeDeleted = $this->addIdsNotToBeDeleted($idsNotToBeDeleted, $filterValue);
                 foreach ($filterValue as $valFilter) {
-                    if(!isset($filterRegistered[$valFilter])){
-                        $filterRegistered[$valFilter][] = (int)$entity->getId();
+                    if (!isset($filterRegistered[$valFilter])) {
+                        $filterRegistered[$valFilter][] = (int) $entity->getId();
                         continue;
                     }
-                    if(in_array($entity->getId(), $filterRegistered[$valFilter], true)){
+                    if (in_array($entity->getId(), $filterRegistered[$valFilter], true)) {
                         continue;
                     }
-                    $filterRegistered[$valFilter][] = (int)$entity->getId();
+                    $filterRegistered[$valFilter][] = (int) $entity->getId();
                 }
             }
         }
@@ -390,10 +384,8 @@ class CompanySegmentModel extends FormModel
         }
 
         $idsNotToBeDeleted = array_intersect($segmentIds, $idsNotToBeDeleted);
-        dump(' idsNotToBeDeleted ',$idsNotToBeDeleted);
 
         foreach ($idsNotToBeDeleted as $val) {
-            dump(' val '.$val);
             $notToBeDeletedEntity = $this->getEntity($val);
             assert($notToBeDeletedEntity instanceof CompanySegment);
 
@@ -405,27 +397,35 @@ class CompanySegmentModel extends FormModel
 
             $namesNotToBeDeleted[$val] = $name;
         }
-        dump('aaa',$namesNotToBeDeleted);
 
         return $namesNotToBeDeleted;
-
     }
 
+    private function getLikeQueryCompanySegment(): string
+    {
+        $platform  = $this->connection->getDatabasePlatform();
+        $isMariaDb = $platform instanceof MariaDBPlatform;
 
-    public function canNotBeDeletedByLeadSegments(array $segmentIds)
+        return $isMariaDb ? '%"type":"company_segments"%' : '%"type": "company_segments"%';
+    }
+
+    /**
+     * @param array<int> $segmentIds
+     *
+     * @return array<string>
+     */
+    public function canNotBeDeletedByLeadSegments(array $segmentIds): array
     {
         $tableAlias = $this->listModel->getRepository()->getTableAlias();
-        $platform = $this->connection->getDatabasePlatform();
-        $isMaria = $platform instanceof MariaDbPlatform;
-        $columnForce = ['column' => 'CAST('.$tableAlias.'.filters AS CHAR)', 'expr' => 'LIKE', 'value' => '%"type";s:16:"company_segments"%'];
-        if ($isMaria) {
-            $columnForce = ['column' => $tableAlias.'.filters', 'expr' => 'LIKE', 'value' => '%"type";s:16:"company_segments"%'];
-        }
         $entities   = $this->listModel->getEntities(
             [
                 'filter' => [
                     'force'  => [
-                        $columnForce
+                        [
+                            'column' => $tableAlias.'.filters',
+                            'expr'   => 'LIKE',
+                            'value'  => '%"type";s:16:"company_segments"%',
+                        ],
                     ],
                 ],
             ]
@@ -450,14 +450,14 @@ class CompanySegmentModel extends FormModel
                 $filterValue       = $eachFilter['properties']['filter'];
                 $idsNotToBeDeleted = $this->addIdsNotToBeDeleted($idsNotToBeDeleted, $filterValue);
                 foreach ($filterValue as $valFilter) {
-                    if(!isset($filterRegistered[$valFilter])){
-                        $filterRegistered[$valFilter][] = (int)$entity->getId();
+                    if (!isset($filterRegistered[$valFilter])) {
+                        $filterRegistered[$valFilter][] = (int) $entity->getId();
                         continue;
                     }
-                    if(in_array($entity->getId(), $filterRegistered[$valFilter], true)){
+                    if (in_array($entity->getId(), $filterRegistered[$valFilter], true)) {
                         continue;
                     }
-                    $filterRegistered[$valFilter][] = (int)$entity->getId();
+                    $filterRegistered[$valFilter][] = (int) $entity->getId();
                 }
             }
 
@@ -469,7 +469,6 @@ class CompanySegmentModel extends FormModel
 
             $idsNotToBeDeleted = array_intersect($segmentIds, $idsNotToBeDeleted);
             foreach ($idsNotToBeDeleted as $val) {
-                dump(' idsNotToBeDeleted '.$val);
                 $notToBeDeletedEntity = $this->getEntity($val);
                 assert($notToBeDeletedEntity instanceof CompanySegment);
                 $name = $notToBeDeletedEntity->getName();
@@ -478,12 +477,11 @@ class CompanySegmentModel extends FormModel
                 }
                 $namesNotToBeDeleted[$val] = $name;
             }
-
         }
 
         return $namesNotToBeDeleted;
-
     }
+
     /**
      * @param array<int> $segmentIds
      *
@@ -516,8 +514,8 @@ class CompanySegmentModel extends FormModel
             );
         }
 
-        $idsNotToBeDeleted   = [];
-        $namesNotToBeDeleted = [];
+        $idsNotToBeDeleted         = [];
+        $namesNotToBeDeleted       = [];
         $filterRegistered          = [];
 
         foreach ($entities as $entity) {
@@ -530,14 +528,14 @@ class CompanySegmentModel extends FormModel
                 $filterValue       = $eachFilter['properties']['filter'];
                 $idsNotToBeDeleted = $this->addIdsNotToBeDeleted($idsNotToBeDeleted, $filterValue);
                 foreach ($filterValue as $valFilter) {
-                    if(!isset($filterRegistered[$valFilter])){
-                        $filterRegistered[$valFilter][] = (int)$entity->getId();
+                    if (!isset($filterRegistered[$valFilter])) {
+                        $filterRegistered[$valFilter][] = (int) $entity->getId();
                         continue;
                     }
-                    if(in_array($entity->getId(), $filterRegistered[$valFilter], true)){
+                    if (in_array($entity->getId(), $filterRegistered[$valFilter], true)) {
                         continue;
                     }
-                    $filterRegistered[$valFilter][] = (int)$entity->getId();
+                    $filterRegistered[$valFilter][] = (int) $entity->getId();
                 }
             }
         }
@@ -567,23 +565,22 @@ class CompanySegmentModel extends FormModel
         return $namesNotToBeDeleted;
     }
 
+    /**
+     * @param array<int> $idsNotToBeDeleted
+     * @param array<int> $newIds
+     *
+     * @return array<int>
+     */
     private function addIdsNotToBeDeleted(array $idsNotToBeDeleted, array $newIds): array
     {
-        if (!is_array($idsNotToBeDeleted) || !is_array($newIds)) {
-            return [];
-        }
         foreach ($newIds as $id) {
             if (!is_numeric($id)) {
                 continue;
             }
-            $id = (int) $id;
-            if (in_array($id, $idsNotToBeDeleted, true)) {
-                continue;
-            }
-            $idsNotToBeDeleted[] = $id;
+            $idsNotToBeDeleted[] = (int) $id;
         }
-        return $idsNotToBeDeleted;
 
+        return $idsNotToBeDeleted;
     }
 
     /**
