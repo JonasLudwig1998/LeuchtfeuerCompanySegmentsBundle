@@ -52,7 +52,7 @@ class CompanyFieldModelDecorated extends FieldModel
                 && is_array($row['properties']['list'])
                 && [] !== $row['properties']['list']
             ) {
-                uasort($row['properties']['list'], fn ($a, $b) => strcasecmp($a['value'] ?? '', $b['value'] ?? ''));
+                uasort($row['properties']['list'], fn ($a, $b): int => strcasecmp($a['value'] ?? '', $b['value'] ?? ''));
                 $row['properties']['list'] = array_values($row['properties']['list']);
                 $rows[$k]                  = $row;
             }
