@@ -18,7 +18,7 @@ jobs:
       matrix:
         php-versions: ['8.0', '8.1']
         db-types: ['mysql', 'mariadb']
-        mautic-versions: ['5.0', '5.1', '5.x', '5.2']
+        mautic-versions: ['5.0', '5.1', '5.x']
         include:
           - mautic-versions: 5.1
             php-versions: 8.2
