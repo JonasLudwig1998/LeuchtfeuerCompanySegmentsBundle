@@ -13,7 +13,7 @@ class SegmentDependencies
     }
 
     /**
-     * @return array<int, array{'label': string, 'route': string, 'ids': array<int, string>}>
+     * @return array<int, mixed>
      */
     public function getChannelsIds(int $segmentId): array
     {

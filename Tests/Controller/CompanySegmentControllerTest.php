@@ -20,6 +20,9 @@ class CompanySegmentControllerTest extends MauticMysqlTestCase
         parent::setUp();
 
         $this->enablePlugin(true);
+
+        $this->useCleanupRollback = false;
+        $this->setUpSymfony($this->configParams);
     }
 
     public function testCreate(): void
