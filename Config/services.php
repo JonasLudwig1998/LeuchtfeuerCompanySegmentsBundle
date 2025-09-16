@@ -42,4 +42,7 @@ return function (ContainerConfigurator $configurator): void {
 
     $services->set(CompanyModelDecorated::class)
         ->decorate(CompanyModel::class);
+
+    $services->set(MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Model\CompanyFieldModelDecorated::class)
+        ->decorate(Mautic\LeadBundle\Model\FieldModel::class);
 };
