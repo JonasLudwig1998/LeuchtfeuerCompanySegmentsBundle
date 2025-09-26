@@ -37,6 +37,7 @@ class CompanySegmentQueryBuilder
         private CompanySegmentRepository $companySegmentRepository,
         private RandomParameterName $randomParameterName,
         private EventDispatcherInterface $dispatcher,
+        private \Psr\Log\LoggerInterface $logger,
     ) {
     }
 
@@ -91,7 +92,19 @@ class CompanySegmentQueryBuilder
                 continue;
             }
 
-            $queryBuilder = $filter->applyQuery($queryBuilder);
+            try {
+                $queryBuilder = $filter->applyQuery($queryBuilder);
+                // If we get here, the table is valid
+            } catch (\Mautic\LeadBundle\Segment\Exception\TableNotFoundException $e) {
+                $this->logger->notice('Error in filter, table '.$filter->contactSegmentFilterCrate->getObject().' not found: '.$e->getMessage());
+                continue;
+                // Invalid table
+            } catch (\Mautic\LeadBundle\Segment\Exception\FieldNotFoundException $e) {
+                $this->logger->notice('Error in filter, field '.$filter->contactSegmentFilterCrate->getField().' not found: '.$e->getMessage());
+                continue;
+                // Table exists but field does not
+            }
+
             // We need to collect params between union queries in this iteration,
             // because they are overwritten by new union query build
             foreach ($queryBuilder->getParameters() as $k => $v) {
