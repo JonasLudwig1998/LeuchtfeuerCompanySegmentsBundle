@@ -74,6 +74,20 @@ class SegmentReferenceFilterQueryBuilder extends BaseFilterQueryBuilder implemen
         \assert(is_string($companiesTableAlias));
         $segmentIds = $filter->getParameterValue();
 
+        if (OperatorOptions::EMPTY === $filter->getOperator() || 'notEmpty' === $filter->getOperator()) {
+            $segmentIds = $this->entityManager->getRepository(CompanySegment::class)->findAll();
+            $segmentIds = array_map(static fn (CompanySegment $segment): ?int => $segment->getId(), $segmentIds);
+            $dataArray = $filter->contactSegmentFilterCrate->getArray();
+            if(
+                array_key_exists('properties', $dataArray)
+                && is_array($dataArray['properties'])
+                && array_key_exists('current_company_id', $dataArray['properties'])
+            ) {
+                $removeId = (int)$dataArray['properties']['current_company_id'];
+                $segmentIds = array_filter($segmentIds, fn ($v) => $v !== $removeId);
+            }
+        }
+
         \assert(is_array($segmentIds) || is_numeric($segmentIds));
 
         if (!is_array($segmentIds)) {
