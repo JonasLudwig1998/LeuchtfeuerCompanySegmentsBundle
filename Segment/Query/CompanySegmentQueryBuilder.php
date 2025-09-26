@@ -10,6 +10,7 @@ use Doctrine\ORM\EntityManager;
 use Mautic\LeadBundle\Entity\CompanyRepository;
 use Mautic\LeadBundle\Segment\ContactSegmentFilter;
 use Mautic\LeadBundle\Segment\ContactSegmentFilters;
+use Mautic\LeadBundle\Segment\OperatorOptions;
 use Mautic\LeadBundle\Segment\Query\QueryBuilder;
 use Mautic\LeadBundle\Segment\RandomParameterName;
 use MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Entity\CompaniesSegments;
@@ -54,9 +55,27 @@ class CompanySegmentQueryBuilder
         $queryBuilder = new QueryBuilder($connection);
 
         $companyTableAlias = $changeAlias ? $this->generateRandomParameterName() : $this->companyRepository->getTableAlias();
+        $leadTableAlias           = $this->generateRandomParameterName();
+        $companyLeadsTableAlias   = $this->generateRandomParameterName();
+        $companySegmentTableAlias = $this->generateRandomParameterName();
 
-        $queryBuilder->select($companyTableAlias.'.id')->from(MAUTIC_TABLE_PREFIX.'companies', $companyTableAlias);
-
+        $queryBuilder->select($companyTableAlias.'.id')->from(MAUTIC_TABLE_PREFIX.'companies', $companyTableAlias)
+            ->join(
+                $companyTableAlias,
+                MAUTIC_TABLE_PREFIX.'companies_leads',
+                $companyLeadsTableAlias,
+                $companyLeadsTableAlias.'.company_id = '.$companyTableAlias.'.id and '.$companyLeadsTableAlias.'.is_primary = 1'
+            )->join(
+                $companyLeadsTableAlias,
+                MAUTIC_TABLE_PREFIX.'leads',
+                $leadTableAlias,
+                $leadTableAlias.'.id = '.$companyLeadsTableAlias.'.lead_id'
+            )->join(
+                $companyTableAlias,
+                MAUTIC_TABLE_PREFIX.'companies_segments',
+                $companySegmentTableAlias,
+                $companySegmentTableAlias.'.segment_id = '.$companySegment->getId().' and '.$companySegmentTableAlias.'.manually_removed = 0',
+            );
         /*
          * Validate the plan, check for circular dependencies.
          *
@@ -88,8 +107,13 @@ class CompanySegmentQueryBuilder
 
             // We need to collect params between union queries in this iteration,
             // because they are overwritten by new union query build
-            $params     = array_merge($params, $queryBuilder->getParameters());
-            $paramTypes = array_merge($paramTypes, $queryBuilder->getParameterTypes());
+            foreach ($queryBuilder->getParameters() as $k => $v) {
+                $params[$k] = $v;
+            }
+            foreach ($queryBuilder->getParameterTypes() as $k => $v) {
+                $paramTypes[$k] = $v;
+            }
+
         }
 
         $queryBuilder->setParameters($params, $paramTypes);
@@ -416,7 +440,19 @@ class CompanySegmentQueryBuilder
         $segmentEdges   = [];
 
         foreach ($segmentFilters as $segmentFilter) {
+
             if (isset($segmentFilter['field']) && CompanySegmentModel::PROPERTIES_FIELD === $segmentFilter['field']) {
+                $operator = $segmentFilter['operator'] ?? null;
+                // If operator is "empty" or "notEmpty", it implicitly refers to "all segments".
+                // Treat this as a self-edge so that circular detection can trigger and prevent recursion.
+                if ($operator === OperatorOptions::EMPTY || $operator === '!empty') {
+                    if (null !== $companySegment->getId()) {
+                        $segmentEdges[] = (int) $companySegment->getId();
+                    }
+                    continue;
+                }
+
+
                 $bcFilter     = $segmentFilter['filter'] ?? [];
                 $filterEdges  = $segmentFilter['properties']['filter'] ?? $bcFilter;
                 $segmentEdges = array_merge($segmentEdges, $filterEdges);
