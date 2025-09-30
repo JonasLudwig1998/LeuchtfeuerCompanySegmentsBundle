@@ -54,7 +54,7 @@ class CompanySegmentAsLeadSegment extends LeadList
                 }
 
                 $properties['current_company_id'] = $companySegment->getId();
-                $filters[$index]['properties'] = $properties;
+                $filters[$index]['properties']    = $properties;
             }
         }
 
