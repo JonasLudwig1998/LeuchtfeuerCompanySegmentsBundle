@@ -122,7 +122,7 @@ class SegmentReferenceFilterQueryBuilderTest extends MauticMysqlTestCase
         $filter = $this->getContactSegmentFilter($operator, (string) $this->segment->getId());
 
         $this->randomParameterMock->method('generateRandomParameterName')
-            ->willReturnOnConsecutiveCalls('queryAlias', 'para1', 'para2', 'para3', 'para4');
+            ->willReturnOnConsecutiveCalls('queryAlias', 'para3', 'para4', 'para1', 'para1');
 
         $this->queryBuilder->applyQuery($queryBuilder, $filter);
 
