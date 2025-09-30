@@ -57,7 +57,6 @@ class CompanySegmentQueryBuilder
         $companyTableAlias = $changeAlias ? $this->generateRandomParameterName() : $this->companyRepository->getTableAlias();
         $leadTableAlias           = $this->generateRandomParameterName();
         $companyLeadsTableAlias   = $this->generateRandomParameterName();
-        $companySegmentTableAlias = $this->generateRandomParameterName();
 
         $queryBuilder->select($companyTableAlias.'.id')->from(MAUTIC_TABLE_PREFIX.'companies', $companyTableAlias)
             ->join(
@@ -70,11 +69,6 @@ class CompanySegmentQueryBuilder
                 MAUTIC_TABLE_PREFIX.'leads',
                 $leadTableAlias,
                 $leadTableAlias.'.id = '.$companyLeadsTableAlias.'.lead_id'
-            )->join(
-                $companyTableAlias,
-                MAUTIC_TABLE_PREFIX.'companies_segments',
-                $companySegmentTableAlias,
-                $companySegmentTableAlias.'.segment_id = '.$companySegment->getId().' and '.$companySegmentTableAlias.'.manually_removed = 0',
             );
         /*
          * Validate the plan, check for circular dependencies.
@@ -447,7 +441,7 @@ class CompanySegmentQueryBuilder
                 // Treat this as a self-edge so that circular detection can trigger and prevent recursion.
                 if ($operator === OperatorOptions::EMPTY || $operator === '!empty') {
                     if (null !== $companySegment->getId()) {
-                        $segmentEdges[] = (int) $companySegment->getId();
+//                        $segmentEdges[] = (int) $companySegment->getId();
                     }
                     continue;
                 }

@@ -75,17 +75,37 @@ class SegmentReferenceFilterQueryBuilder extends BaseFilterQueryBuilder implemen
         $segmentIds = $filter->getParameterValue();
 
         if (OperatorOptions::EMPTY === $filter->getOperator() || 'notEmpty' === $filter->getOperator()) {
-            $segmentIds = $this->entityManager->getRepository(CompanySegment::class)->findAll();
-            $segmentIds = array_map(static fn (CompanySegment $segment): ?int => $segment->getId(), $segmentIds);
+
             $dataArray = $filter->contactSegmentFilterCrate->getArray();
-            if(
+            $currentSegmentId = null;
+            if (
                 array_key_exists('properties', $dataArray)
                 && is_array($dataArray['properties'])
                 && array_key_exists('current_company_id', $dataArray['properties'])
             ) {
-                $removeId = (int)$dataArray['properties']['current_company_id'];
-                $segmentIds = array_filter($segmentIds, fn ($v) => $v !== $removeId);
+                $currentSegmentId = (int) $dataArray['properties']['current_company_id'];
             }
+
+            $sub  = $queryBuilder->createQueryBuilder();
+            $t    = $this->generateRandomParameterName();
+            $sub->select('1')
+                ->from(MAUTIC_TABLE_PREFIX.'companies_segments', $t)
+                ->where($sub->expr()->eq($t.'.company_id', $companiesTableAlias.'.id'));
+
+            // exclude current segment id if provided
+            if (null !== $currentSegmentId ) {
+                $sub->andWhere($sub->expr()->neq($t.'.segment_id', ':current_segment_id'));
+                $queryBuilder->setParameter('current_segment_id', $currentSegmentId);
+            }
+
+            $expr = (OperatorOptions::EMPTY === $filter->getOperator())
+                ? $queryBuilder->expr()->notExists($sub->getSQL())
+                : $queryBuilder->expr()->exists($sub->getSQL());
+
+            $queryBuilder->addLogic($expr, $filter->getGlue());
+
+
+            return $queryBuilder;
         }
 
         \assert(is_array($segmentIds) || is_numeric($segmentIds));
