@@ -73,10 +73,8 @@ class SegmentReferenceFilterQueryBuilder extends BaseFilterQueryBuilder implemen
         $companiesTableAlias = $queryBuilder->getTableAlias(MAUTIC_TABLE_PREFIX.'companies');
         \assert(is_string($companiesTableAlias));
         $segmentIds = $filter->getParameterValue();
-
         if (OperatorOptions::EMPTY === $filter->getOperator() || 'notEmpty' === $filter->getOperator()) {
-
-            $dataArray = $filter->contactSegmentFilterCrate->getArray();
+            $dataArray        = $filter->contactSegmentFilterCrate->getArray();
             $currentSegmentId = null;
             if (
                 array_key_exists('properties', $dataArray)
@@ -93,7 +91,7 @@ class SegmentReferenceFilterQueryBuilder extends BaseFilterQueryBuilder implemen
                 ->where($sub->expr()->eq($t.'.company_id', $companiesTableAlias.'.id'));
 
             // exclude current segment id if provided
-            if (null !== $currentSegmentId ) {
+            if (null !== $currentSegmentId) {
                 $sub->andWhere($sub->expr()->neq($t.'.segment_id', ':current_segment_id'));
                 $queryBuilder->setParameter('current_segment_id', $currentSegmentId);
             }
@@ -104,10 +102,8 @@ class SegmentReferenceFilterQueryBuilder extends BaseFilterQueryBuilder implemen
 
             $queryBuilder->addLogic($expr, $filter->getGlue());
 
-
             return $queryBuilder;
         }
-
         \assert(is_array($segmentIds) || is_numeric($segmentIds));
 
         if (!is_array($segmentIds)) {
@@ -115,7 +111,6 @@ class SegmentReferenceFilterQueryBuilder extends BaseFilterQueryBuilder implemen
         }
 
         $orLogic = [];
-
         foreach ($segmentIds as $segmentId) {
             $exclusion = in_array($filter->getOperator(), ['notExists', 'notIn'], true);
 

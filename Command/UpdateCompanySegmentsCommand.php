@@ -80,7 +80,7 @@ class UpdateCompanySegmentsCommand extends ModeratedCommand
         $output                = true === $input->getOption('quiet') ? new NullOutput() : $output;
         $excludeSegments       = $input->getOption('exclude');
 
-        if (null !== $id && !($id > 0)) {
+        if (null !== $id && !((int) $id > 0)) {
             $output->writeln('<error>The --segment-id option must be a positive number or none.</error>');
 
             return self::FAILURE;
@@ -106,7 +106,7 @@ class UpdateCompanySegmentsCommand extends ModeratedCommand
             $startTime = microtime(true);
         }
 
-        if (null !== $id && (int)$id > 0) {
+        if (null !== $id && (int) $id > 0) {
             $segment = $this->companySegmentModel->getEntity($id);
             assert($segment instanceof CompanySegment);
 

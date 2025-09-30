@@ -103,8 +103,9 @@ class SegmentReferenceFilterQueryBuilderTest extends MauticMysqlTestCase
      */
     public function dataApplyQuery(): iterable
     {
-        yield 'eq' => ['eq', 'SELECT 1 FROM <prefix>companies comp WHERE EXISTS(SELECT null FROM <prefix>companies queryAlias WHERE (comp.id = queryAlias.id) AND ((EXISTS(SELECT null FROM <prefix>companies_segments para1 WHERE (queryAlias.id = para1.company_id) AND ((para1.segment_id = %1$s) AND ((para1.manually_added = 1) OR (para1.manually_removed = 0))))) AND (EXISTS(SELECT null FROM <prefix>companies_segments para2 WHERE (queryAlias.id = para2.company_id) AND (para2.segment_id = %1$s)))))'];
-        yield 'notExists' => ['notExists', 'SELECT 1 FROM <prefix>companies comp WHERE NOT EXISTS(SELECT null FROM <prefix>companies queryAlias WHERE (comp.id = queryAlias.id) AND ((EXISTS(SELECT null FROM <prefix>companies_segments para1 WHERE (queryAlias.id = para1.company_id) AND ((para1.segment_id = %1$s) AND ((para1.manually_added = 1) OR (para1.manually_removed = 0))))) AND (EXISTS(SELECT null FROM <prefix>companies_segments para2 WHERE (queryAlias.id = para2.company_id) AND (para2.segment_id = %1$s)))))'];
+        yield 'eq' => ['eq', 'SELECT 1 FROM <prefix>companies comp WHERE EXISTS(SELECT null FROM <prefix>companies queryAlias WHERE (comp.id = queryAlias.id) AND ((EXISTS(SELECT null FROM <prefix>companies_segments para3 WHERE (queryAlias.id = para3.company_id) AND ((para3.segment_id = %1$s) AND ((para3.manually_added = 1) OR (para3.manually_removed = 0))))) AND (EXISTS(SELECT null FROM <prefix>companies_segments para4 WHERE (queryAlias.id = para4.company_id) AND (para4.segment_id = %1$s)))))'];
+        yield 'notExists' => ['notExists', 'SELECT 1 FROM <prefix>companies comp WHERE NOT EXISTS(SELECT null FROM <prefix>companies queryAlias WHERE (comp.id = queryAlias.id) AND ((EXISTS(SELECT null FROM <prefix>companies_segments para3 WHERE (queryAlias.id = para3.company_id) AND ((para3.segment_id = %1$s) AND ((para3.manually_added = 1) OR (para3.manually_removed = 0))))) AND (EXISTS(SELECT null FROM <prefix>companies_segments para4 WHERE (queryAlias.id = para4.company_id) AND (para4.segment_id = %1$s)))))'];
+        yield 'exists' => ['exists', 'SELECT 1 FROM <prefix>companies comp WHERE EXISTS(SELECT null FROM <prefix>companies queryAlias WHERE (comp.id = queryAlias.id) AND ((EXISTS(SELECT null FROM <prefix>companies_segments para3 WHERE (queryAlias.id = para3.company_id) AND ((para3.segment_id = %1$s) AND ((para3.manually_added = 1) OR (para3.manually_removed = 0))))) AND (EXISTS(SELECT null FROM <prefix>companies_segments para4 WHERE (queryAlias.id = para4.company_id) AND (para4.segment_id = %1$s)))))'];
     }
 
     /**
@@ -121,7 +122,7 @@ class SegmentReferenceFilterQueryBuilderTest extends MauticMysqlTestCase
         $filter = $this->getContactSegmentFilter($operator, (string) $this->segment->getId());
 
         $this->randomParameterMock->method('generateRandomParameterName')
-            ->willReturnOnConsecutiveCalls('queryAlias', 'para1', 'para2');
+            ->willReturnOnConsecutiveCalls('queryAlias', 'para1', 'para2', 'para3', 'para4');
 
         $this->queryBuilder->applyQuery($queryBuilder, $filter);
 

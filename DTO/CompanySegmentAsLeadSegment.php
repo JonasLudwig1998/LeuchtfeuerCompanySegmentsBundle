@@ -36,10 +36,10 @@ class CompanySegmentAsLeadSegment extends LeadList
     /**
      * @return array<mixed>|null
      */
-    private function updateCurrentCompanySegmentId( CompanySegment $companySegment): array
+    private function updateCurrentCompanySegmentId(CompanySegment $companySegment): array
     {
         $filters = $companySegment->getFilters();
-        $id = $companySegment->getId();
+        $id      = $companySegment->getId();
         if (null === $id) {
             return $filters;
         }
@@ -48,6 +48,7 @@ class CompanySegmentAsLeadSegment extends LeadList
                 $filters[$index]['properties']['current_company_id'] = $companySegment->getId();
             }
         }
+
         return $filters;
     }
 
