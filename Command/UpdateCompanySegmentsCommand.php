@@ -109,7 +109,7 @@ class UpdateCompanySegmentsCommand extends ModeratedCommand
             $startTime = microtime(true);
         }
 
-        if (null !== $id && (int) $id > 0) {
+        if (null !== $id) {
             assert(is_int($id));
             $segment = $this->companySegmentModel->getEntity($id);
             assert($segment instanceof CompanySegment);
