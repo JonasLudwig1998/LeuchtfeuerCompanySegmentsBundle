@@ -309,6 +309,9 @@ class CompanySegmentModel extends FormModel
         foreach ($entities as $entity) {
             $retrFilters = $entity->getFilters();
             foreach ($retrFilters as $eachFilter) {
+                if (!array_key_exists('properties', $eachFilter) || !array_key_exists('filter', $eachFilter['properties'])) {
+                    continue;
+                }
                 $filter = $eachFilter['properties']['filter'];
                 if ($filter && self::PROPERTIES_FIELD === $eachFilter['type'] && in_array($segmentId, $filter, true)) {
                     $value = $accessor->getValue($entity, $returnProperty);
@@ -522,6 +525,9 @@ class CompanySegmentModel extends FormModel
             $retrFilters = $entity->getFilters();
             foreach ($retrFilters as $eachFilter) {
                 if (self::PROPERTIES_FIELD !== $eachFilter['type']) {
+                    continue;
+                }
+                if (!array_key_exists('properties', $eachFilter) || !array_key_exists('filter', $eachFilter['properties'])) {
                     continue;
                 }
                 /** @var array<int> $filterValue */

@@ -80,10 +80,13 @@ class UpdateCompanySegmentsCommand extends ModeratedCommand
         $output                = true === $input->getOption('quiet') ? new NullOutput() : $output;
         $excludeSegments       = $input->getOption('exclude');
 
-        if (null !== $id && !(is_int($id) && $id > 0)) {
-            $output->writeln('<error>The --segment-id option must be a positive number or none.</error>');
+        // Validate segment-id
+        if (null !== $id) {
+            if (!is_numeric($id) || !((int) $id > 0)) {
+                $output->writeln('<error>The --segment-id option must be a positive number or none.</error>');
 
-            return self::FAILURE;
+                return self::FAILURE;
+            }
         }
 
         if (!is_int($batch) || $batch < 1) {
@@ -107,6 +110,7 @@ class UpdateCompanySegmentsCommand extends ModeratedCommand
         }
 
         if (null !== $id) {
+            assert(is_int($id));
             $segment = $this->companySegmentModel->getEntity($id);
             assert($segment instanceof CompanySegment);
 

@@ -69,21 +69,23 @@ class TypeOperatorSubscriber implements EventSubscriberInterface
                 'operators'  => $this->typeOperatorProvider->getOperatorsForFieldType('default'),
                 'object'     => 'company',
             ],
-            CompanySegmentModel::PROPERTIES_FIELD => [
-                'label'      => $this->translator->trans('mautic.company_segments.filter.lists'),
-                'properties' => [
-                    'type' => CompanySegmentModel::PROPERTIES_FIELD,
-                    'list' => $this->fieldChoicesProvider->getChoicesForField('multiselect', CompanySegmentModel::PROPERTIES_FIELD, $event->getSearch()),
-                ],
-                'operators'  => $this->typeOperatorProvider->getOperatorsForFieldType('multiselect'),
-                'object'     => 'company',
-            ],
         ];
 
         foreach ($staticFields as $alias => $fieldOptions) {
             // label is defined as mautic.lead.company_segments
-            $event->addChoice(CompanySegmentModel::PROPERTIES_FIELD, $alias, $fieldOptions);
+            $event->addChoice('company', $alias, $fieldOptions);
         }
+
+        $companySegmentFieldOptions = [
+            'label'      => $this->translator->trans('mautic.company_segments.filter.lists'),
+            'properties' => [
+                'type' => CompanySegmentModel::PROPERTIES_FIELD,
+                'list' => $this->fieldChoicesProvider->getChoicesForField('multiselect', CompanySegmentModel::PROPERTIES_FIELD, $event->getSearch()),
+            ],
+            'operators'  => $this->typeOperatorProvider->getOperatorsForFieldType('multiselect'),
+            'object'     => 'company',
+        ];
+        $event->addChoice(CompanySegmentModel::PROPERTIES_FIELD, CompanySegmentModel::PROPERTIES_FIELD, $companySegmentFieldOptions);
     }
 
     public function updateGenerateSegmentFiltersAddStaticFieldsToLeadSegment(LeadListFiltersChoicesEvent $event): void
@@ -102,21 +104,23 @@ class TypeOperatorSubscriber implements EventSubscriberInterface
                 'operators'  => $this->typeOperatorProvider->getOperatorsForFieldType('default'),
                 'object'     => 'company',
             ],
-            CompanySegmentModel::PROPERTIES_FIELD => [
-                'label'      => $this->translator->trans('mautic.company_segments.filter.lists'),
-                'properties' => [
-                    'type' => CompanySegmentModel::PROPERTIES_FIELD,
-                    'list' => $this->fieldChoicesProvider->getChoicesForField('multiselect', CompanySegmentModel::PROPERTIES_FIELD, $event->getSearch()),
-                ],
-                'operators'  => $this->typeOperatorProvider->getOperatorsForFieldType('multiselect'),
-                'object'     => 'company',
-            ],
         ];
 
         foreach ($staticFields as $alias => $fieldOptions) {
             // label is defined as mautic.lead.company_segments
-            $event->addChoice(CompanySegmentModel::PROPERTIES_FIELD, $alias, $fieldOptions);
+            $event->addChoice('company', $alias, $fieldOptions);
         }
+
+        $companySegmentFieldOptions = [
+            'label'      => $this->translator->trans('mautic.company_segments.filter.lists'),
+            'properties' => [
+                'type' => CompanySegmentModel::PROPERTIES_FIELD,
+                'list' => $this->fieldChoicesProvider->getChoicesForField('multiselect', CompanySegmentModel::PROPERTIES_FIELD, $event->getSearch()),
+            ],
+            'operators'  => $this->typeOperatorProvider->getOperatorsForFieldType('multiselect'),
+            'object'     => 'company',
+        ];
+        $event->addChoice(CompanySegmentModel::PROPERTIES_FIELD, CompanySegmentModel::PROPERTIES_FIELD, $companySegmentFieldOptions);
     }
 
     public function updateGenerateSegmentFiltersAddCustomFieldsToLeadSegment(LeadListFiltersChoicesEvent $event): void

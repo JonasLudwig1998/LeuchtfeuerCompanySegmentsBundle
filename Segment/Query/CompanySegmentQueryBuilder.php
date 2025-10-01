@@ -36,6 +36,7 @@ class CompanySegmentQueryBuilder
         private CompanySegmentRepository $companySegmentRepository,
         private RandomParameterName $randomParameterName,
         private EventDispatcherInterface $dispatcher,
+        private \Psr\Log\LoggerInterface $logger,
     ) {
     }
 
@@ -52,10 +53,9 @@ class CompanySegmentQueryBuilder
 
         $queryBuilder = new QueryBuilder($connection);
 
-        $companyTableAlias = $changeAlias ? $this->generateRandomParameterName() : $this->companyRepository->getTableAlias();
+        $companyTableAlias        = $changeAlias ? $this->generateRandomParameterName() : $this->companyRepository->getTableAlias();
 
         $queryBuilder->select($companyTableAlias.'.id')->from(MAUTIC_TABLE_PREFIX.'companies', $companyTableAlias);
-
         /*
          * Validate the plan, check for circular dependencies.
          *
@@ -72,11 +72,27 @@ class CompanySegmentQueryBuilder
                 continue;
             }
 
-            $queryBuilder = $filter->applyQuery($queryBuilder);
+            try {
+                $queryBuilder = $filter->applyQuery($queryBuilder);
+                // If we get here, the table is valid
+            } catch (\Mautic\LeadBundle\Segment\Exception\TableNotFoundException $e) {
+                $this->logger->notice('Error in filter, table '.$filter->contactSegmentFilterCrate->getObject().' not found: '.$e->getMessage());
+                continue;
+                // Invalid table
+            } catch (\Mautic\LeadBundle\Segment\Exception\FieldNotFoundException $e) {
+                $this->logger->notice('Error in filter, field '.$filter->contactSegmentFilterCrate->getField().' not found: '.$e->getMessage());
+                continue;
+                // Table exists but field does not
+            }
+
             // We need to collect params between union queries in this iteration,
             // because they are overwritten by new union query build
-            $params     = array_merge($params, $queryBuilder->getParameters());
-            $paramTypes = array_merge($paramTypes, $queryBuilder->getParameterTypes());
+            foreach ($queryBuilder->getParameters() as $k => $v) {
+                $params[$k] = $v;
+            }
+            foreach ($queryBuilder->getParameterTypes() as $k => $v) {
+                $paramTypes[$k] = $v;
+            }
         }
 
         $queryBuilder->setParameters($params, $paramTypes);

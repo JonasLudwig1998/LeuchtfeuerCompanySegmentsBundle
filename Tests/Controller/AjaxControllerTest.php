@@ -27,7 +27,7 @@ class AjaxControllerTest extends MauticMysqlTestCase
         $this->client->xmlHttpRequest(Request::METHOD_POST, '/s/ajax', [
             'action'      => 'plugin:LeuchtfeuerCompanySegments:loadCompanySegmentFilterForm',
             'fieldAlias'  => 'date_modified',
-            'fieldObject' => 'company_segments',
+            'fieldObject' => 'company',
             'operator'    => OperatorOptions::EQUAL_TO,
             'filterNum'   => '1',
         ], [], $this->createAjaxHeaders());

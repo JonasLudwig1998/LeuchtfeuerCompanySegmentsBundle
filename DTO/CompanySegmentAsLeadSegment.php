@@ -28,9 +28,37 @@ class CompanySegmentAsLeadSegment extends LeadList
         \assert(null !== $id);
 
         $this->id      = $id;
-        $this->filters = $companySegment->getFilters();
+        $this->filters = $this->updateCurrentCompanySegmentId($companySegment);
 
         parent::__construct();
+    }
+
+    /**
+     * @return array<array<mixed>>
+     */
+    private function updateCurrentCompanySegmentId(CompanySegment $companySegment): array
+    {
+        $filters = $companySegment->getFilters();
+        $id      = $companySegment->getId();
+        if (null === $id) {
+            return $filters;
+        }
+        foreach ($filters as $index => $filter) {
+            if (!is_array($filter)) {
+                continue;
+            }
+            if (array_key_exists('properties', $filter)) {
+                $properties = $filter['properties'];
+                if (!is_array($properties)) {
+                    continue;
+                }
+
+                $properties['current_company_id'] = $companySegment->getId();
+                $filters[$index]['properties']    = $properties;
+            }
+        }
+
+        return $filters;
     }
 
     public function getId(): int

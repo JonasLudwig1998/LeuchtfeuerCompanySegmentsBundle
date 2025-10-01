@@ -73,7 +73,37 @@ class SegmentReferenceFilterQueryBuilder extends BaseFilterQueryBuilder implemen
         $companiesTableAlias = $queryBuilder->getTableAlias(MAUTIC_TABLE_PREFIX.'companies');
         \assert(is_string($companiesTableAlias));
         $segmentIds = $filter->getParameterValue();
+        if (OperatorOptions::EMPTY === $filter->getOperator() || 'notEmpty' === $filter->getOperator()) {
+            $dataArray        = $filter->contactSegmentFilterCrate->getArray();
+            $currentSegmentId = null;
+            if (
+                array_key_exists('properties', $dataArray)
+                && is_array($dataArray['properties'])
+                && array_key_exists('current_company_id', $dataArray['properties'])
+            ) {
+                $currentSegmentId = (int) $dataArray['properties']['current_company_id'];
+            }
 
+            $sub  = $queryBuilder->createQueryBuilder();
+            $t    = $this->generateRandomParameterName();
+            $sub->select('1')
+                ->from(MAUTIC_TABLE_PREFIX.'companies_segments', $t)
+                ->where($sub->expr()->eq($t.'.company_id', $companiesTableAlias.'.id'));
+
+            // exclude current segment id if provided
+            if (null !== $currentSegmentId) {
+                $sub->andWhere($sub->expr()->neq($t.'.segment_id', ':current_segment_id'));
+                $queryBuilder->setParameter('current_segment_id', $currentSegmentId);
+            }
+
+            $expr = (OperatorOptions::EMPTY === $filter->getOperator())
+                ? $queryBuilder->expr()->notExists($sub->getSQL())
+                : $queryBuilder->expr()->exists($sub->getSQL());
+
+            $queryBuilder->addLogic($expr, $filter->getGlue());
+
+            return $queryBuilder;
+        }
         \assert(is_array($segmentIds) || is_numeric($segmentIds));
 
         if (!is_array($segmentIds)) {
@@ -81,7 +111,6 @@ class SegmentReferenceFilterQueryBuilder extends BaseFilterQueryBuilder implemen
         }
 
         $orLogic = [];
-
         foreach ($segmentIds as $segmentId) {
             $exclusion = in_array($filter->getOperator(), ['notExists', 'notIn'], true);
 
