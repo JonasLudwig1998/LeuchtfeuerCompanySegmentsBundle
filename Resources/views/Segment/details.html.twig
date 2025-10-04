@@ -20,6 +20,20 @@ Variables
 
 {% block headerTitle %}{{ segment.name }}{% endblock %}
 
+{% block indexButton %}
+    {{- include('@MauticCore/Helper/page_actions.html.twig',
+        {
+            'item'            : segment,
+            'langVar'         : 'company_segments',
+            'customButtons': customButtons|default([]),
+            'templateButtons' : {
+                'close' : securityHasEntityAccess(true, true, segment.createdBy),
+            },
+            'routeBase'   : 'company_segments',
+            'targetLabel' : 'mautic.company_segments.menu.index'|trans
+        }
+    ) -}}
+{% endblock %}
 {% block actions %}
     {{- include('@MauticCore/Helper/page_actions.html.twig', {
         'item': segment,
