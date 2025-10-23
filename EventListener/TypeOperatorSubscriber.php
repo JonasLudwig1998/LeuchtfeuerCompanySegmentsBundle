@@ -88,14 +88,14 @@ class TypeOperatorSubscriber implements EventSubscriberInterface
         $event->addChoice(CompanySegmentModel::PROPERTIES_FIELD, CompanySegmentModel::PROPERTIES_FIELD, $companySegmentFieldOptions);
 
         $leadSegmentMembership = [
-            'label'      => 'Segment Membership of lead',
+            'label'      => 'Contact Segment Membership',
             'properties' => [
                 'type' => 'leadlist',
                 'list' => $this->fieldChoicesProvider->getChoicesForField('multiselect', 'leadlist'),
             ],
             'operators'  => $this->typeOperatorProvider->getOperatorsForFieldType('multiselect'),
         ];
-        $event->addChoice('any_company_contact', 'any_company_contact', $leadSegmentMembership);
+        $event->addChoice('any_companycontact', 'contactsegmentmembership', $leadSegmentMembership);
     }
 
     public function updateGenerateSegmentFiltersAddStaticFieldsToLeadSegment(LeadListFiltersChoicesEvent $event): void

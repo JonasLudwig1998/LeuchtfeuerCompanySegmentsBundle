@@ -6,6 +6,7 @@ use Mautic\LeadBundle\Entity\Company;
 use Mautic\LeadBundle\Entity\CompanyLead;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Entity\LeadList;
+use Mautic\LeadBundle\Entity\ListLead;
 use MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Entity\CompaniesSegments;
 use MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Entity\CompanySegment;
 use MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Tests\MauticMysqlTestCase;
@@ -348,6 +349,67 @@ class UpdateCompanySegmentsCommandTest extends MauticMysqlTestCase
         self::assertCount(3, $leadListTotalAfter);
     }
 
+    public function testUpdateCompanySegmentsWithLeadListFilter(): void
+    {
+        $companyWithLeadWithoutSegment  = $this->addCompany('noleadsegment', 'contact@globo.com');
+        $companyWithLeadWithSegment1    = $this->addCompany('leadsegment1', 'contact@sbt.com');
+        $companyWithLeadWithSegment2 = $this->addCompany('leadsegment2', 'contact@record.com');
+
+        $contactWithoutSegment   = $this->createLead('Nosegment', 'leadone@mautic.com');
+        $contactWithSegment1  = $this->createLead('Segment1', 'leadtwo@mautic.com');
+        $contactWithSegment2 = $this->createLead('Segment2', 'leadthree@mautic.com');
+
+        $leadSegment1 = $this->createLeadSegment('Segment 1', 'segment_1');
+        $leadSegment2 = $this->createLeadSegment('Segment 2', 'segment_2');
+
+        $this->addLeadToSegment($contactWithSegment1, $leadSegment1);
+        $this->addLeadToSegment($contactWithSegment2, $leadSegment2);
+
+        $contactWithoutSegment->setPrimaryCompany($companyWithLeadWithoutSegment);
+
+        $contactWithSegment1->setPrimaryCompany($companyWithLeadWithSegment1);
+
+        $contactWithSegment2->setPrimaryCompany($companyWithLeadWithSegment2);
+
+        $this->em->persist($contactWithoutSegment);
+        $this->em->persist($contactWithSegment1);
+        $this->em->persist($contactWithSegment2);
+        $this->em->flush();
+
+        $emptyLeadListSegment    = $this->createCompanySegment('Empty Lead Segments', 'empty_lead_segments');
+        $filters              = [
+            'filters' => [
+                'glue'       => 'and',
+                'operator'   => 'in',
+                'properties' => [
+                    'filter' => [$companySegmentOne->getId()],
+                ],
+                'field'  => 'company_segments',
+                'type'   => 'company_segments',
+                'object' => 'company_segments',
+            ],
+        ];
+        $companySegmentTwo             = $this->createCompanySegment('Test Segment 2', 'test_segment2', true, $filters);
+        $resultCompaniesSegmentsBefore = $this->em->getRepository(CompaniesSegments::class)->findAll();
+
+        self::assertCount(1, $resultCompaniesSegmentsBefore);
+
+        $kernel        = static::getContainer()->get('kernel');
+        assert($kernel instanceof \Symfony\Component\HttpKernel\KernelInterface);
+        $application   = new Application($kernel);
+        $application->setAutoExit(false);
+        $command       = $application->find('leuchtfeuer:abm:segments-update');
+        $commandTester = new CommandTester($command);
+        $commandTester->execute([]);
+
+        $resultCompaniesSegmentsAfter = $this->em->getRepository(CompaniesSegments::class)->findAll();
+        self::assertCount(2, $resultCompaniesSegmentsAfter);
+        assert($resultCompaniesSegmentsAfter[0] instanceof CompaniesSegments);
+        assert($resultCompaniesSegmentsAfter[1] instanceof CompaniesSegments);
+        self::assertEquals($resultCompaniesSegmentsAfter[0]->getCompany()->getId(), $resultCompaniesSegmentsAfter[1]->getCompany()->getId());
+        self::assertEquals($resultCompaniesSegmentsAfter[1]->getCompanySegment()->getId(), $companySegmentTwo->getId());
+    }
+
     private function createLead(string $name, string $email, ?Company $companyName = null): Lead
     {
         $lead = new Lead();
@@ -421,6 +483,16 @@ class UpdateCompanySegmentsCommandTest extends MauticMysqlTestCase
         $this->em->flush();
 
         return $companiesSegments;
+    }
+
+    private function addLeadToSegment(Lead $lead, LeadList $segment): void
+    {
+        $listLead = new ListLead();
+        $listLead->setLead($lead);
+        $listLead->setList($segment);
+        $listLead->setDateAdded(new \DateTime());
+        $this->em->persist($listLead);
+        $this->em->flush();
     }
 
     private function addLeadToCompany(Company $company, Lead $lead, bool $isPrimary = true): CompanyLead
