@@ -8,10 +8,10 @@ use Doctrine\DBAL\ArrayParameterType;
 use Mautic\LeadBundle\Event\SegmentDictionaryGenerationEvent;
 use Mautic\LeadBundle\LeadEvents;
 use Mautic\LeadBundle\Segment\ContactSegmentFilter;
+use Mautic\LeadBundle\Segment\OperatorOptions;
 use Mautic\LeadBundle\Segment\Query\Filter\BaseFilterQueryBuilder;
 use Mautic\LeadBundle\Segment\Query\QueryBuilder;
 use Mautic\LeadBundle\Segment\RandomParameterName;
-use Mautic\LeadBundle\Segment\OperatorOptions;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -38,9 +38,9 @@ class CompanyLeadSegmentMembershipFilterQueryBuilder extends BaseFilterQueryBuil
         $companiesTableAlias = $this->ensureStringTableAlias($queryBuilder, MAUTIC_TABLE_PREFIX.'companies');
 
         if (OperatorOptions::EMPTY === $filter->getOperator() || 'notEmpty' === $filter->getOperator()) {
-            $sub = $queryBuilder->createQueryBuilder();
-            $cl = $this->generateRandomParameterName();
-            $lll = $this->generateRandomParameterName();
+            $sub            = $queryBuilder->createQueryBuilder();
+            $cl             = $this->generateRandomParameterName();
+            $lll            = $this->generateRandomParameterName();
             $isPrimaryParam = $this->generateRandomParameterName();
 
             $sub->select('1')
@@ -56,18 +56,19 @@ class CompanyLeadSegmentMembershipFilterQueryBuilder extends BaseFilterQueryBuil
                 : $queryBuilder->expr()->exists($sub->getSQL());
 
             $queryBuilder->addLogic($expr, $filter->getGlue());
+
             return $queryBuilder;
         }
 
-        $segmentIds = $this->ensureNumericSegmentIds($filter->getParameterValue());
-        $operator = $filter->getOperator();
+        $segmentIds  = $this->ensureNumericSegmentIds($filter->getParameterValue());
+        $operator    = $filter->getOperator();
         $isExclusion = in_array($operator, ['notExists', 'notIn'], true);
 
-        $sub = $queryBuilder->createQueryBuilder();
-        $cl = $this->generateRandomParameterName();
-        $lll = $this->generateRandomParameterName();
+        $sub             = $queryBuilder->createQueryBuilder();
+        $cl              = $this->generateRandomParameterName();
+        $lll             = $this->generateRandomParameterName();
         $segmentIdsParam = $this->generateRandomParameterName();
-        $isPrimaryParam = $this->generateRandomParameterName();
+        $isPrimaryParam  = $this->generateRandomParameterName();
 
         $sub->select('1')
             ->from(MAUTIC_TABLE_PREFIX.'companies_leads', $cl)
@@ -108,11 +109,11 @@ class CompanyLeadSegmentMembershipFilterQueryBuilder extends BaseFilterQueryBuil
         if (!is_string($alias)) {
             throw new \RuntimeException("Could not get table alias for table: $tableName");
         }
+
         return $alias;
     }
 
     /**
-     * @param mixed $segmentIds
      * @return array<int>
      */
     private function ensureNumericSegmentIds($segmentIds): array
@@ -121,13 +122,15 @@ class CompanyLeadSegmentMembershipFilterQueryBuilder extends BaseFilterQueryBuil
             if (!is_numeric($segmentIds)) {
                 throw new \RuntimeException('Segment IDs must be numeric or array of numeric values');
             }
+
             return [(int) $segmentIds];
         }
-        
-        return array_map(function($id) {
+
+        return array_map(function ($id) {
             if (!is_numeric($id)) {
                 throw new \RuntimeException('All segment IDs must be numeric');
             }
+
             return (int) $id;
         }, $segmentIds);
     }
