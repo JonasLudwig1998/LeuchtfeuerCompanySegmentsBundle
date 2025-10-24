@@ -35,9 +35,7 @@ class CompanyLeadSegmentMembershipFilterQueryBuilder extends BaseFilterQueryBuil
             throw new \RuntimeException('This filter only supports any_company_contact field');
         }
 
-        $companiesTableAlias = $queryBuilder->getTableAlias(MAUTIC_TABLE_PREFIX.'companies');
-        $segmentIds = $filter->getParameterValue();
-
+        $companiesTableAlias = $this->ensureStringTableAlias($queryBuilder, MAUTIC_TABLE_PREFIX.'companies');
 
         if (OperatorOptions::EMPTY === $filter->getOperator() || 'notEmpty' === $filter->getOperator()) {
             $sub = $queryBuilder->createQueryBuilder();
@@ -61,10 +59,7 @@ class CompanyLeadSegmentMembershipFilterQueryBuilder extends BaseFilterQueryBuil
             return $queryBuilder;
         }
 
-        if (!is_array($segmentIds)) {
-            $segmentIds = [(int) $segmentIds];
-        }
-
+        $segmentIds = $this->ensureNumericSegmentIds($filter->getParameterValue());
         $operator = $filter->getOperator();
         $isExclusion = in_array($operator, ['notExists', 'notIn'], true);
 
@@ -105,5 +100,35 @@ class CompanyLeadSegmentMembershipFilterQueryBuilder extends BaseFilterQueryBuil
         return [
             LeadEvents::SEGMENT_DICTIONARY_ON_GENERATE => 'onAddFilter',
         ];
+    }
+
+    private function ensureStringTableAlias(QueryBuilder $queryBuilder, string $tableName): string
+    {
+        $alias = $queryBuilder->getTableAlias($tableName);
+        if (!is_string($alias)) {
+            throw new \RuntimeException("Could not get table alias for table: $tableName");
+        }
+        return $alias;
+    }
+
+    /**
+     * @param mixed $segmentIds
+     * @return array<int>
+     */
+    private function ensureNumericSegmentIds($segmentIds): array
+    {
+        if (!is_array($segmentIds)) {
+            if (!is_numeric($segmentIds)) {
+                throw new \RuntimeException('Segment IDs must be numeric or array of numeric values');
+            }
+            return [(int) $segmentIds];
+        }
+        
+        return array_map(function($id) {
+            if (!is_numeric($id)) {
+                throw new \RuntimeException('All segment IDs must be numeric');
+            }
+            return (int) $id;
+        }, $segmentIds);
     }
 }

@@ -88,7 +88,7 @@ class TypeOperatorSubscriber implements EventSubscriberInterface
         $event->addChoice(CompanySegmentModel::PROPERTIES_FIELD, CompanySegmentModel::PROPERTIES_FIELD, $companySegmentFieldOptions);
 
         $leadSegmentMembership = [
-            'label'      => 'Contact Segment Membership',
+            'label' => 'mautic.company_segments.filter.lead_lists',
             'properties' => [
                 'type' => 'leadlist',
                 'list' => $this->fieldChoicesProvider->getChoicesForField('multiselect', 'leadlist'),
