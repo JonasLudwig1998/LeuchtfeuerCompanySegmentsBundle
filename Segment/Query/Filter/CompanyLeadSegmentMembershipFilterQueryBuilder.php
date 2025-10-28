@@ -116,7 +116,7 @@ class CompanyLeadSegmentMembershipFilterQueryBuilder extends BaseFilterQueryBuil
     /**
      * @return array<int>
      */
-    private function ensureNumericSegmentIds($segmentIds): array
+    private function ensureNumericSegmentIds(mixed $segmentIds): array
     {
         if (!is_array($segmentIds)) {
             if (!is_numeric($segmentIds)) {
@@ -126,7 +126,7 @@ class CompanyLeadSegmentMembershipFilterQueryBuilder extends BaseFilterQueryBuil
             return [(int) $segmentIds];
         }
 
-        return array_map(function ($id) {
+        return array_map(function ($id): int {
             if (!is_numeric($id)) {
                 throw new \RuntimeException('All segment IDs must be numeric');
             }
